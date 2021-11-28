@@ -6,6 +6,7 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -26,7 +27,7 @@ public class Main {
         lexer.addErrorListener(new CustomErrorListener());
         List<? extends Token> allTokens = lexer.getAllTokens();
         if (!Recorder.hasLexicalError) {
-             printTokens(allTokens);
+             //printTokens(allTokens);
         } else {
             return;
         }

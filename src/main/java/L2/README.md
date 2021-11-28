@@ -9,23 +9,23 @@
 - 需要分清各个类以及各个接口的区别 很复杂
 - ParseTreeVisitor里面有visitTerminal()方法
 
-```java
+``` java
 
-	public T visitChildren(RuleNode node) {
-		T result = defaultResult();
-		int n = node.getChildCount();
-		for (int i=0; i<n; i++) {
-			if (!shouldVisitNextChild(node, result)) {
-				break;
-			}
+public T visitChildren(RuleNode node) {
+    T result = defaultResult();
+    int n = node.getChildCount();
+    for (int i=0; i<n; i++) {
+        if (!shouldVisitNextChild(node, result)) {
+            break;
+        }
 
-			ParseTree c = node.getChild(i);
-			T childResult = c.accept(this);
-			result = aggregateResult(result, childResult);
-		}
+        ParseTree c = node.getChild(i);
+        T childResult = c.accept(this);
+        result = aggregateResult(result, childResult);
+    }
 
-		return result;
-	}
+    return result;
+}
 
 ```
 
