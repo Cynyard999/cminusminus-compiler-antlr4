@@ -5,7 +5,7 @@ options {
 }
 
 // High-level Definitions
-program: extDef*;
+program: extDef* EOF;
 
 extDef: specifier extDecList SEMI
   | specifier SEMI
@@ -31,7 +31,9 @@ optTag: ID
 tag: ID;
 
 // Declarators
-varDec: ID (LB INT RB)* ;
+varDec: ID (LB (INT| (errorToken = FLOAT|errorToken = ID)
+{notifyErrorListeners($errorToken, "array size must be an integer constant, not "+$errorToken.getText(), null);}
+) RB)*;
 
 funDec: ID LP varList RP
   | ID LP RP
@@ -76,13 +78,12 @@ exp: ID LP args RP
   | exp (STAR | DIV) exp
   | exp (PLUS | MINUS) exp
   | exp RELOP exp
-  |<assoc=right>exp ASSIGNOP exp
   | exp AND exp
   | exp OR exp
+  |<assoc=right>exp ASSIGNOP exp
   | ID
   | INT
   | FLOAT
   ;
 
-args: exp (COMMA exp)*
-  ;
+args: exp (COMMA exp)*;

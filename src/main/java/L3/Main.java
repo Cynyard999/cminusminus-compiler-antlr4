@@ -1,4 +1,4 @@
-package L2;
+package L3;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -9,9 +9,12 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-
+/**
+ * @author cynyard
+ * @description
+ * @date 12/1/21
+ */
 public class Main {
-
     public static void main(String[] args) throws Exception {
 
         InputStream is = System.in;
@@ -26,7 +29,7 @@ public class Main {
         lexer.addErrorListener(new CustomErrorListener());
         List<? extends Token> allTokens = lexer.getAllTokens();
         if (!FlagHelper.hasLexicalError) {
-             //printTokens(allTokens);
+            //printTokens(allTokens);
         } else {
             return;
         }
@@ -42,7 +45,7 @@ public class Main {
 //        System.out.println(tree.getClass().getName());
 //        System.out.println(tree.toStringTree(parser));
         if (parser.getNumberOfSyntaxErrors() == 0) {
-            CmmVisitor visitor = new CmmVisitor();
+            CmmTreeAnalyzer visitor = new CmmTreeAnalyzer();
             visitor.visit(tree);
         }
     }
@@ -73,4 +76,5 @@ public class Main {
         }
         return tokenText;
     }
+
 }
