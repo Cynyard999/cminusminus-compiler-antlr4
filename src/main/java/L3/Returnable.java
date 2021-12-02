@@ -2,7 +2,7 @@ package L3;
 
 /**
  * @author cynyard
- * @description
+ * @description use this interface as return type in visitor functions
  * @date 12/2/21
  */
 public interface Returnable {

@@ -1,6 +1,6 @@
 package L3;
 
-import java.util.Stack;
+import java.util.*;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
@@ -12,7 +12,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     HashTable table = HashTable.getHashTable();
     // Only the function that pushes can pop and called sub_function just uses peek to get needed element
-    Stack<Type> typeStack = new Stack<>();
+    Deque<Type> typeStack = new LinkedList<>();
 
 
     @Override
