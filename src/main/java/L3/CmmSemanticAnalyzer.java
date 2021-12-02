@@ -148,7 +148,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
                 continue;
             }
             if (fieldList != null) {
-                fieldList.addField((FieldList) visit(ctx.paramDec(i)));
+                fieldList.addField(nextField);
             }
         }
         return fieldList;
@@ -160,6 +160,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         typeStack.push(specifier);
         FieldList param = (FieldList) visit(ctx.varDec());
         typeStack.pop();
+        table.addNode(param.getType(), param.getName());
         return param;
     }
 
@@ -201,6 +202,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitStmtIf(CmmParser.StmtIfContext ctx) {
         Type exp = (Type) visit(ctx.exp());
+        if (exp == null) {
+            return defaultResult();
+        }
         if (exp.getKind() != Kind.INT) {
             printError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
         }
@@ -245,7 +249,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
                 continue;
             }
             if (fieldList != null) {
-                fieldList.addField((FieldList) visit(ctx.def(i)));
+                fieldList.addField(nextField);
             }
         }
         return fieldList;
@@ -253,7 +257,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     @Override
     public Returnable visitDef(CmmParser.DefContext ctx) {
-        Type specifier = (Type) visit(ctx.decList());
+        Type specifier = (Type) visit(ctx.specifier());
         typeStack.push(specifier);
         FieldList fieldList = (FieldList) visit(ctx.decList());
         typeStack.pop();
@@ -270,7 +274,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
                 continue;
             }
             if (fieldList != null) {
-                fieldList.addField((FieldList) visit(ctx.dec(i)));
+                fieldList.addField(nextField);
             }
         }
         return fieldList;
@@ -320,7 +324,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             }
         } else {
             FieldList args = (FieldList) visit(ctx.args());
-            if (CheckHelper.isFieldListEqual(((Function) func).getParamList(), args)) {
+            if (!CheckHelper.isFieldListEqual(((Function) func).getParamList(), args)) {
                 printError(ErrorType.MISMATCH_PARAM, ctx.LP().getSymbol().getLine());
                 return defaultResult();
             }
@@ -359,6 +363,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         }
         if (exp.getKind() != Kind.STRUCTURE) {
             printError(ErrorType.ILLEGAL_DOT, ctx.DOT().getSymbol().getLine());
+            return defaultResult();
         }
         FieldList memberList = ((Structure) exp).getMemberList();
         while (memberList != null) {
