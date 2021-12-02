@@ -1,6 +1,8 @@
 package L3;
 
+import L3.CmmParser.ExpContext;
 import java.util.Stack;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
  * @author cynyard
@@ -10,7 +12,6 @@ import java.util.Stack;
 public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     HashTable table = HashTable.getHashTable();
-
     // Only the function that pushes can pop and called sub_function just uses peek to get needed element
     Stack<Type> typeStack = new Stack<>();
 
@@ -93,8 +94,13 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
         FieldList fieldList = new FieldList();
         fieldList.setName(ctx.ID(0).getText());
         if (table.checkDuplicate(fieldList.getName())) {
-            printError(ErrorType.REDEF_FEILD, ctx.ID(0).getSymbol().getLine());
-            return defaultResult();
+            if (ctx.inStruct) {
+                printError(ErrorType.REDEF_FEILD, ctx.ID(0).getSymbol().getLine());
+                return defaultResult();
+            } else {
+                printError(ErrorType.REDEF_VAR, ctx.ID(0).getSymbol().getLine());
+                return defaultResult();
+            }
         }
         if (ctx.getChildCount() > 1) {
             Array firstArray = new Array();
@@ -274,15 +280,24 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     @Override
     public Returnable visitDec(CmmParser.DecContext ctx) {
-        FieldList varDec = (FieldList) visit(ctx.varDec());
-        Type exp = null;
-        if (ctx.exp() != null) {
-            exp = (Type) visit(ctx.exp());
+        FieldList varDec;
+        if (ctx.getChildCount() > 1) {
+            // if in struct there is ASSIGNOP, do not visit varDec
+            if (ctx.inStruct) {
+                printError(ErrorType.REDEF_FEILD, ctx.ASSIGNOP().getSymbol().getLine());
+                return defaultResult();
+            }
+            varDec = (FieldList) visit(ctx.varDec());
+            Type exp = (Type) visit(ctx.exp());
+            if (varDec != null && !CheckHelper.isTypeEqual(varDec.getType(), exp)) {
+                printError(ErrorType.MISMATCH_ASSIGN, ctx.exp().getStart().getLine());
+                return defaultResult();
+            }
         }
-        if (varDec != null && exp != null && !CheckHelper.isTypeEqual((varDec).getType(), exp)) {
-            printError(ErrorType.MISMATCH_ASSIGN, ctx.exp().getStart().getLine());
-            return defaultResult();
+        else {
+            varDec = (FieldList) visit(ctx.varDec());
         }
+        // add to symbol table until
         if (varDec != null) {
             table.addNode(varDec.getType(), varDec.getName());
         }
@@ -290,78 +305,203 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
     }
 
     @Override
-    public Returnable visitExpDot(CmmParser.ExpDotContext ctx) {
-        return super.visitExpDot(ctx);
-    }
-
-    @Override
-    public Returnable visitExpFunc(CmmParser.ExpFuncContext ctx) {
-        return super.visitExpFunc(ctx);
-    }
-
-    @Override
-    public Returnable visitExpOr(CmmParser.ExpOrContext ctx) {
-        return super.visitExpOr(ctx);
-    }
-
-    @Override
-    public Returnable visitExpRelop(CmmParser.ExpRelopContext ctx) {
-        return super.visitExpRelop(ctx);
-    }
-
-    @Override
-    public Returnable visitExpPlusMinus(CmmParser.ExpPlusMinusContext ctx) {
-        return super.visitExpPlusMinus(ctx);
-    }
-
-    @Override
-    public Returnable visitExpAssignop(CmmParser.ExpAssignopContext ctx) {
-        return super.visitExpAssignop(ctx);
+    public Returnable visitExpFuncArgs(CmmParser.ExpFuncArgsContext ctx) {
+        Type func = table.getType(ctx.ID().getText());
+        if (func == null) {
+            printError(ErrorType.UNDEF_FUNC, ctx.ID().getSymbol().getLine());
+            return defaultResult();
+        }
+        if (func.getKind() != Kind.FUNCTION) {
+            printError(ErrorType.NON_FUNC, ctx.ID().getSymbol().getLine());
+            return defaultResult();
+        }
+        if (ctx.args() == null) {
+            if (((Function) func).getParamList() != null) {
+                printError(ErrorType.MISMATCH_PARAM, ctx.LP().getSymbol().getLine());
+                return defaultResult();
+            }
+        } else {
+            FieldList args = (FieldList) visit(ctx.args());
+            if (CheckHelper.isFieldListEqual(((Function) func).getParamList(), args)) {
+                printError(ErrorType.MISMATCH_PARAM, ctx.LP().getSymbol().getLine());
+                return defaultResult();
+            }
+        }
+        return ((Function) func).getReturnType();
     }
 
     @Override
     public Returnable visitExpParenthesis(CmmParser.ExpParenthesisContext ctx) {
-        return super.visitExpParenthesis(ctx);
-    }
-
-    @Override
-    public Returnable visitExpFloat(CmmParser.ExpFloatContext ctx) {
-        return super.visitExpFloat(ctx);
-    }
-
-    @Override
-    public Returnable visitExpAnd(CmmParser.ExpAndContext ctx) {
-        return super.visitExpAnd(ctx);
-    }
-
-    @Override
-    public Returnable visitExpFuncArgs(CmmParser.ExpFuncArgsContext ctx) {
-        return super.visitExpFuncArgs(ctx);
-    }
-
-    @Override
-    public Returnable visitExpStarDiv(CmmParser.ExpStarDivContext ctx) {
-        return super.visitExpStarDiv(ctx);
-    }
-
-    @Override
-    public Returnable visitExpInt(CmmParser.ExpIntContext ctx) {
-        return super.visitExpInt(ctx);
-    }
-
-    @Override
-    public Returnable visitExpMinusNot(CmmParser.ExpMinusNotContext ctx) {
-        return super.visitExpMinusNot(ctx);
-    }
-
-    @Override
-    public Returnable visitExpId(CmmParser.ExpIdContext ctx) {
-        return super.visitExpId(ctx);
+        return visit(ctx.exp());
     }
 
     @Override
     public Returnable visitExpBrackets(CmmParser.ExpBracketsContext ctx) {
-        return super.visitExpBrackets(ctx);
+        Type array = (Type) visit(ctx.exp(0));
+        Type index = (Type) visit(ctx.exp(1));
+        if (array == null || index == null) {
+            return defaultResult();
+        }
+        if (array.getKind() != Kind.ARRAY) {
+            printError(ErrorType.NON_ARRAY, ctx.exp(0).getStart().getLine());
+            return defaultResult();
+        }
+        if (index.getKind() != Kind.INT) {
+            printError(ErrorType.NON_INT, ctx.exp(0).getStart().getLine());
+            return defaultResult();
+        }
+        return ((Array) array).getElements();
+    }
+
+    @Override
+    public Returnable visitExpDot(CmmParser.ExpDotContext ctx) {
+        Type exp = (Type) visit(ctx.exp());
+        if (exp == null) {
+            return defaultResult();
+        }
+        if (exp.getKind() != Kind.STRUCTURE) {
+            printError(ErrorType.ILLEGAL_DOT, ctx.DOT().getSymbol().getLine());
+        }
+        FieldList memberList = ((Structure) exp).getMemberList();
+        while (memberList != null) {
+            if (memberList.getName().equals(ctx.ID().getText())) {
+                return memberList.getType();
+            }
+            memberList = memberList.getNext();
+        }
+        printError(ErrorType.UNDEF_FIELD, ctx.ID().getSymbol().getLine());
+        return defaultResult();
+    }
+
+    @Override
+    public Returnable visitExpMinusNot(CmmParser.ExpMinusNotContext ctx) {
+        Type exp = (Type) visit(ctx.exp());
+        if (exp.getKind() != Kind.INT || exp.getKind() != Kind.FLOAT) {
+            printError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
+            return defaultResult();
+        }
+        return exp;
+    }
+
+    @Override
+    public Returnable visitExpStarDiv(CmmParser.ExpStarDivContext ctx) {
+        return checkArithmeticOperation(ctx.exp(0), ctx.exp(1), (TerminalNode) ctx.getChild(1));
+    }
+
+    @Override
+    public Returnable visitExpPlusMinus(CmmParser.ExpPlusMinusContext ctx) {
+        return checkArithmeticOperation(ctx.exp(0), ctx.exp(1), (TerminalNode) ctx.getChild(1));
+    }
+
+    private Returnable checkArithmeticOperation(ExpContext exp, ExpContext exp2,
+            TerminalNode operand) {
+        Type firstExp = (Type) visit(exp);
+        Type secondExp = (Type) visit(exp2);
+        if (firstExp == null || secondExp == null) {
+            return defaultResult();
+        }
+        if (firstExp.getKind() != Kind.INT && firstExp.getKind() != Kind.FLOAT) {
+            printError(ErrorType.MISMATCH_OPRAND, exp.getStart().getLine());
+            return defaultResult();
+        }
+        if (secondExp.getKind() != Kind.INT && secondExp.getKind() != Kind.FLOAT) {
+            printError(ErrorType.MISMATCH_OPRAND, exp2.getStart().getLine());
+            return defaultResult();
+        }
+        if (firstExp.getKind() != secondExp.getKind()) {
+            printError(ErrorType.MISMATCH_OPRAND,
+                    operand.getSymbol().getLine());
+            return defaultResult();
+        }
+        return firstExp;
+    }
+
+    @Override
+    public Returnable visitExpRelop(CmmParser.ExpRelopContext ctx) {
+        Type firstExp = (Type) visit(ctx.exp(0));
+        Type secondExp = (Type) visit(ctx.exp(1));
+        if (firstExp == null || secondExp == null) {
+            return defaultResult();
+        }
+        if (firstExp.getKind() != Kind.INT && firstExp.getKind() != Kind.FLOAT) {
+            printError(ErrorType.MISMATCH_OPRAND, ctx.exp(0).getStart().getLine());
+            return defaultResult();
+        }
+        if (secondExp.getKind() != Kind.INT && firstExp.getKind() != Kind.FLOAT) {
+            printError(ErrorType.MISMATCH_OPRAND, ctx.exp(1).getStart().getLine());
+            return defaultResult();
+        }
+        if (firstExp.getKind() != secondExp.getKind()) {
+            printError(ErrorType.MISMATCH_OPRAND,
+                    ctx.RELOP().getSymbol().getLine());
+            return defaultResult();
+        }
+        return new Basic("int");
+    }
+
+    @Override
+    public Returnable visitExpAnd(CmmParser.ExpAndContext ctx) {
+        return checkLogicalOperation(ctx.exp(0), ctx.exp(1));
+    }
+
+    @Override
+    public Returnable visitExpOr(CmmParser.ExpOrContext ctx) {
+        return checkLogicalOperation(ctx.exp(0), ctx.exp(1));
+    }
+
+    private Returnable checkLogicalOperation(ExpContext exp, ExpContext exp2) {
+        Type firstExp = (Type) visit(exp);
+        Type secondExp = (Type) visit(exp2);
+        if (firstExp == null || secondExp == null) {
+            return defaultResult();
+        }
+        if (firstExp.getKind() != Kind.INT) {
+            printError(ErrorType.MISMATCH_OPRAND, exp.getStart().getLine());
+            return defaultResult();
+        }
+        if (secondExp.getKind() != Kind.INT) {
+            printError(ErrorType.MISMATCH_OPRAND, exp2.getStart().getLine());
+            return defaultResult();
+        }
+        return new Basic("int");
+    }
+
+    @Override
+    public Returnable visitExpAssignop(CmmParser.ExpAssignopContext ctx) {
+        Type firstExp = (Type) visit(ctx.exp(0));
+        Type secondExp = (Type) visit(ctx.exp(1));
+        if (firstExp == null || secondExp == null) {
+            return defaultResult();
+        }
+        if (!CheckHelper.isLeftExp(ctx.exp(0))) {
+            printError(ErrorType.EXP_ASSIGN, ctx.exp(0).getStart().getLine());
+            return defaultResult();
+        }
+        if (!CheckHelper.isTypeEqual(firstExp, secondExp)) {
+            printError(ErrorType.MISMATCH_ASSIGN, ctx.ASSIGNOP().getSymbol().getLine());
+            return defaultResult();
+        }
+        return firstExp;
+    }
+
+    @Override
+    public Returnable visitExpId(CmmParser.ExpIdContext ctx) {
+        Type ID = table.getType(ctx.ID().getText());
+        if (ID == null) {
+            printError(ErrorType.UNDEF_VAR, ctx.ID().getSymbol().getLine());
+            return defaultResult();
+        }
+        return ID;
+    }
+
+    @Override
+    public Returnable visitExpInt(CmmParser.ExpIntContext ctx) {
+        return new Basic("int");
+    }
+
+    @Override
+    public Returnable visitExpFloat(CmmParser.ExpFloatContext ctx) {
+        return new Basic("float");
     }
 
     @Override
@@ -386,6 +526,6 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     private void printError(ErrorType errorType, int lineNo) {
         System.err.println("Error type " + errorType.getErrorNo() + " at Line " + lineNo
-                + " : check by yourself plz.");
+                + " : " + errorType.getErrorMsg());
     }
 }

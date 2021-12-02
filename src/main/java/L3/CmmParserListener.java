@@ -262,18 +262,6 @@ public interface CmmParserListener extends ParseTreeListener {
 	 */
 	void exitExpDot(CmmParser.ExpDotContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code expFunc}
-	 * labeled alternative in {@link CmmParser#exp}.
-	 * @param ctx the parse tree
-	 */
-	void enterExpFunc(CmmParser.ExpFuncContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code expFunc}
-	 * labeled alternative in {@link CmmParser#exp}.
-	 * @param ctx the parse tree
-	 */
-	void exitExpFunc(CmmParser.ExpFuncContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code expOr}
 	 * labeled alternative in {@link CmmParser#exp}.
 	 * @param ctx the parse tree

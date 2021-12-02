@@ -1,5 +1,7 @@
 package L3;
 
+import L3.CmmParser.ExpParenthesisContext;
+
 /**
  * @author cynyard
  * @description help to check
@@ -55,4 +57,21 @@ public class CheckHelper {
         }
         return first == null && second == null;
     }
+
+    public static boolean isLeftExp(CmmParser.ExpContext ctx){
+        if (ctx instanceof CmmParser.ExpIdContext) {
+            return true;
+        }
+        if (ctx instanceof CmmParser.ExpDotContext) {
+            return true;
+        }
+        if (ctx instanceof  CmmParser.ExpBracketsContext){
+            return true;
+        }
+        if (ctx instanceof CmmParser.ExpParenthesisContext) {
+            return isLeftExp(((ExpParenthesisContext) ctx).exp());
+        }
+        return false;
+    }
+
 }

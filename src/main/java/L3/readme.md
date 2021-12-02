@@ -44,3 +44,4 @@ struct A{
 
 为什么不用visitXXX而是使用visit呢，因为如果加上了alias，你并不知道visit哪个
 
+只有浮点数和int才能赋值？

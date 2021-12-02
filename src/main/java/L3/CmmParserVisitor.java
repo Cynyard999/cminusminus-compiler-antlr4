@@ -162,13 +162,6 @@ public interface CmmParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExpDot(CmmParser.ExpDotContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code expFunc}
-	 * labeled alternative in {@link CmmParser#exp}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExpFunc(CmmParser.ExpFuncContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code expOr}
 	 * labeled alternative in {@link CmmParser#exp}.
 	 * @param ctx the parse tree

@@ -304,18 +304,6 @@ public class CmmParserBaseListener implements CmmParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterExpFunc(CmmParser.ExpFuncContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitExpFunc(CmmParser.ExpFuncContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterExpOr(CmmParser.ExpOrContext ctx) { }
 	/**
 	 * {@inheritDoc}

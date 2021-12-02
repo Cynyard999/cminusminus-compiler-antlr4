@@ -12,7 +12,7 @@ extDef: specifier extDecList SEMI
   | specifier funDec compSt
   ;
 
-extDecList: varDec (COMMA varDec)*;
+extDecList: varDec[false] (COMMA varDec[false])*;
 
 
 // Specifier
@@ -20,7 +20,7 @@ specifier: structSpecifier
   | TYPE
   ;
 
-structSpecifier: STRUCT optTag LC defList RC
+structSpecifier: STRUCT optTag LC defList[true] RC
   | STRUCT tag
   ;
 
@@ -31,7 +31,7 @@ optTag: ID
 tag: ID;
 
 // Declarators
-varDec: ID (LB (INT| (errorToken = FLOAT|errorToken = ID)
+varDec[boolean inStruct]: ID (LB (INT| (errorToken = FLOAT|errorToken = ID)
 {notifyErrorListeners($errorToken, "array size must be an integer constant, not "+$errorToken.getText(), null);}
 ) RB)*;
 
@@ -41,10 +41,10 @@ funDec: ID LP varList RP
 
 varList: paramDec (COMMA paramDec)*;
 
-paramDec: specifier varDec;
+paramDec: specifier varDec[false];
 
 // Statements
-compSt: LC defList stmtList RC;
+compSt: LC defList[false] stmtList RC;
 
 stmtList: stmt*;
 
@@ -57,20 +57,19 @@ stmt: exp SEMI #stmtExp
   ;
 
 // Local Definitions
-defList: def*;
+defList[boolean inStruct]: def[$inStruct]*;
 
-def: specifier decList SEMI;
+def[boolean inStruct]: specifier decList[$inStruct] SEMI;
 
-decList: dec (COMMA dec)*
+decList[boolean inStruct]: dec[$inStruct] (COMMA dec[$inStruct])*
 ;
 
-dec: varDec
-  | varDec ASSIGNOP exp
+dec[boolean inStruct]: varDec[$inStruct]
+  | varDec[$inStruct] ASSIGNOP exp
   ;
 
 // Expressions
-exp: ID LP args RP #expFuncArgs
-  | ID LP RP #expFunc
+exp: ID LP args? RP #expFuncArgs
   | LP exp RP #expParenthesis
   | exp LB exp RB #expBrackets
   | exp DOT ID #expDot
