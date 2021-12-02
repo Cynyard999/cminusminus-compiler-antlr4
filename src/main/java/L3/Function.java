@@ -10,6 +10,10 @@ public class Function extends Type {
     private Type returnType;
     private FieldList paramList;
 
+    public Function() {
+        setKind(Kind.FUNCTION);
+    }
+
     public String getName() {
         return name;
     }

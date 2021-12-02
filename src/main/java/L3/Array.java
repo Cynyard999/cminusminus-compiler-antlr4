@@ -9,6 +9,10 @@ public class Array extends Type {
     Type elements;
     int size;
 
+    public Array() {
+        setKind(Kind.ARRAY);
+    }
+
     public Type getElements() {
         return elements;
     }

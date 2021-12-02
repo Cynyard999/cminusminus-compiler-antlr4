@@ -89,11 +89,47 @@ public interface CmmParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStmtList(CmmParser.StmtListContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link CmmParser#stmt}.
+	 * Visit a parse tree produced by the {@code stmtExp}
+	 * labeled alternative in {@link CmmParser#stmt}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitStmt(CmmParser.StmtContext ctx);
+	T visitStmtExp(CmmParser.StmtExpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stmtCompSt}
+	 * labeled alternative in {@link CmmParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStmtCompSt(CmmParser.StmtCompStContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stmtReturn}
+	 * labeled alternative in {@link CmmParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStmtReturn(CmmParser.StmtReturnContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stmtIf}
+	 * labeled alternative in {@link CmmParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStmtIf(CmmParser.StmtIfContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stmtIfElse}
+	 * labeled alternative in {@link CmmParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStmtIfElse(CmmParser.StmtIfElseContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stmtWhile}
+	 * labeled alternative in {@link CmmParser#stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStmtWhile(CmmParser.StmtWhileContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link CmmParser#defList}.
 	 * @param ctx the parse tree
@@ -119,11 +155,110 @@ public interface CmmParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDec(CmmParser.DecContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link CmmParser#exp}.
+	 * Visit a parse tree produced by the {@code expDot}
+	 * labeled alternative in {@link CmmParser#exp}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExp(CmmParser.ExpContext ctx);
+	T visitExpDot(CmmParser.ExpDotContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expFunc}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpFunc(CmmParser.ExpFuncContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expOr}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpOr(CmmParser.ExpOrContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expRelop}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpRelop(CmmParser.ExpRelopContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expPlusMinus}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpPlusMinus(CmmParser.ExpPlusMinusContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expAssignop}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpAssignop(CmmParser.ExpAssignopContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expParenthesis}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpParenthesis(CmmParser.ExpParenthesisContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expFloat}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpFloat(CmmParser.ExpFloatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expAnd}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpAnd(CmmParser.ExpAndContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expFuncArgs}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpFuncArgs(CmmParser.ExpFuncArgsContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expStarDiv}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpStarDiv(CmmParser.ExpStarDivContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expInt}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpInt(CmmParser.ExpIntContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expMinusNot}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpMinusNot(CmmParser.ExpMinusNotContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expId}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpId(CmmParser.ExpIdContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expBrackets}
+	 * labeled alternative in {@link CmmParser#exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpBrackets(CmmParser.ExpBracketsContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link CmmParser#args}.
 	 * @param ctx the parse tree

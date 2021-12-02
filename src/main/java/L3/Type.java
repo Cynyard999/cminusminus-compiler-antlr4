@@ -5,7 +5,7 @@ package L3;
  * @description
  * @date 12/1/21
  */
-public abstract class Type {
+public abstract class Type implements Returnable{
     private Kind kind;
     public Kind getKind() {
         return kind;

@@ -48,12 +48,12 @@ compSt: LC defList stmtList RC;
 
 stmtList: stmt*;
 
-stmt: exp SEMI
-  | compSt
-  | RETURN exp SEMI
-  | IF LP exp RP stmt
-  | IF LP exp RP stmt ELSE stmt
-  | WHILE LP exp RP stmt
+stmt: exp SEMI #stmtExp
+  | compSt #stmtCompSt
+  | RETURN exp SEMI #stmtReturn
+  | IF LP exp RP stmt #stmtIf
+  | IF LP exp RP stmt ELSE stmt #stmtIfElse
+  | WHILE LP exp RP stmt #stmtWhile
   ;
 
 // Local Definitions
@@ -69,21 +69,21 @@ dec: varDec
   ;
 
 // Expressions
-exp: ID LP args RP
-  | ID LP RP
-  | LP exp RP
-  | exp LB exp RB
-  | exp DOT ID
-  | <assoc=right>(MINUS | NOT) exp
-  | exp (STAR | DIV) exp
-  | exp (PLUS | MINUS) exp
-  | exp RELOP exp
-  | exp AND exp
-  | exp OR exp
-  |<assoc=right>exp ASSIGNOP exp
-  | ID
-  | INT
-  | FLOAT
+exp: ID LP args RP #expFuncArgs
+  | ID LP RP #expFunc
+  | LP exp RP #expParenthesis
+  | exp LB exp RB #expBrackets
+  | exp DOT ID #expDot
+  | <assoc=right>(MINUS | NOT) exp #expMinusNot
+  | exp (STAR | DIV) exp #expStarDiv
+  | exp (PLUS | MINUS) exp #expPlusMinus
+  | exp RELOP exp #expRelop
+  | exp AND exp #expAnd
+  | exp OR exp #expOr
+  |<assoc=right>exp ASSIGNOP exp #expAssignop
+  | ID #expId
+  | INT #expInt
+  | FLOAT #expFloat
   ;
 
 args: exp (COMMA exp)*;

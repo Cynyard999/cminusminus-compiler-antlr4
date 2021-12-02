@@ -8,6 +8,11 @@ package L3;
 public class Structure extends Type {
     private String name;
     private FieldList memberList;
+
+    public Structure() {
+        this.setKind(Kind.STRUCTURE);
+    }
+
     public String getName() {
         return name;
     }

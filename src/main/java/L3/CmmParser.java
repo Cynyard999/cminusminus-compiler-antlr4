@@ -969,16 +969,92 @@ public class CmmParser extends Parser {
 	}
 
 	public static class StmtContext extends ParserRuleContext {
+		public StmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_stmt; }
+	 
+		public StmtContext() { }
+		public void copyFrom(StmtContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class StmtExpContext extends StmtContext {
 		public ExpContext exp() {
 			return getRuleContext(ExpContext.class,0);
 		}
 		public TerminalNode SEMI() { return getToken(CmmParser.SEMI, 0); }
-		public CompStContext compSt() {
-			return getRuleContext(CompStContext.class,0);
+		public StmtExpContext(StmtContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterStmtExp(this);
 		}
-		public TerminalNode RETURN() { return getToken(CmmParser.RETURN, 0); }
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitStmtExp(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitStmtExp(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class StmtWhileContext extends StmtContext {
+		public TerminalNode WHILE() { return getToken(CmmParser.WHILE, 0); }
+		public TerminalNode LP() { return getToken(CmmParser.LP, 0); }
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
+		public TerminalNode RP() { return getToken(CmmParser.RP, 0); }
+		public StmtContext stmt() {
+			return getRuleContext(StmtContext.class,0);
+		}
+		public StmtWhileContext(StmtContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterStmtWhile(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitStmtWhile(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitStmtWhile(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class StmtIfContext extends StmtContext {
 		public TerminalNode IF() { return getToken(CmmParser.IF, 0); }
 		public TerminalNode LP() { return getToken(CmmParser.LP, 0); }
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
+		public TerminalNode RP() { return getToken(CmmParser.RP, 0); }
+		public StmtContext stmt() {
+			return getRuleContext(StmtContext.class,0);
+		}
+		public StmtIfContext(StmtContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterStmtIf(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitStmtIf(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitStmtIf(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class StmtIfElseContext extends StmtContext {
+		public TerminalNode IF() { return getToken(CmmParser.IF, 0); }
+		public TerminalNode LP() { return getToken(CmmParser.LP, 0); }
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
 		public TerminalNode RP() { return getToken(CmmParser.RP, 0); }
 		public List<StmtContext> stmt() {
 			return getRuleContexts(StmtContext.class);
@@ -987,22 +1063,58 @@ public class CmmParser extends Parser {
 			return getRuleContext(StmtContext.class,i);
 		}
 		public TerminalNode ELSE() { return getToken(CmmParser.ELSE, 0); }
-		public TerminalNode WHILE() { return getToken(CmmParser.WHILE, 0); }
-		public StmtContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_stmt; }
+		public StmtIfElseContext(StmtContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterStmt(this);
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterStmtIfElse(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitStmt(this);
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitStmtIfElse(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitStmt(this);
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitStmtIfElse(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class StmtReturnContext extends StmtContext {
+		public TerminalNode RETURN() { return getToken(CmmParser.RETURN, 0); }
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
+		public TerminalNode SEMI() { return getToken(CmmParser.SEMI, 0); }
+		public StmtReturnContext(StmtContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterStmtReturn(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitStmtReturn(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitStmtReturn(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class StmtCompStContext extends StmtContext {
+		public CompStContext compSt() {
+			return getRuleContext(CompStContext.class,0);
+		}
+		public StmtCompStContext(StmtContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterStmtCompSt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitStmtCompSt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitStmtCompSt(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1015,6 +1127,7 @@ public class CmmParser extends Parser {
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,12,_ctx) ) {
 			case 1:
+				_localctx = new StmtExpContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(137);
@@ -1024,6 +1137,7 @@ public class CmmParser extends Parser {
 				}
 				break;
 			case 2:
+				_localctx = new StmtCompStContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(140);
@@ -1031,6 +1145,7 @@ public class CmmParser extends Parser {
 				}
 				break;
 			case 3:
+				_localctx = new StmtReturnContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(141);
@@ -1042,6 +1157,7 @@ public class CmmParser extends Parser {
 				}
 				break;
 			case 4:
+				_localctx = new StmtIfContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(145);
@@ -1057,6 +1173,7 @@ public class CmmParser extends Parser {
 				}
 				break;
 			case 5:
+				_localctx = new StmtIfElseContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
 				setState(151);
@@ -1076,6 +1193,7 @@ public class CmmParser extends Parser {
 				}
 				break;
 			case 6:
+				_localctx = new StmtWhileContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
 				setState(159);
@@ -1349,47 +1467,332 @@ public class CmmParser extends Parser {
 	}
 
 	public static class ExpContext extends ParserRuleContext {
+		public ExpContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_exp; }
+	 
+		public ExpContext() { }
+		public void copyFrom(ExpContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class ExpDotContext extends ExpContext {
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
+		public TerminalNode DOT() { return getToken(CmmParser.DOT, 0); }
+		public TerminalNode ID() { return getToken(CmmParser.ID, 0); }
+		public ExpDotContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpDot(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpDot(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpDot(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpFuncContext extends ExpContext {
 		public TerminalNode ID() { return getToken(CmmParser.ID, 0); }
 		public TerminalNode LP() { return getToken(CmmParser.LP, 0); }
-		public ArgsContext args() {
-			return getRuleContext(ArgsContext.class,0);
-		}
 		public TerminalNode RP() { return getToken(CmmParser.RP, 0); }
+		public ExpFuncContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpFunc(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpFunc(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpFunc(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpOrContext extends ExpContext {
 		public List<ExpContext> exp() {
 			return getRuleContexts(ExpContext.class);
 		}
 		public ExpContext exp(int i) {
 			return getRuleContext(ExpContext.class,i);
 		}
-		public TerminalNode MINUS() { return getToken(CmmParser.MINUS, 0); }
-		public TerminalNode NOT() { return getToken(CmmParser.NOT, 0); }
-		public TerminalNode INT() { return getToken(CmmParser.INT, 0); }
-		public TerminalNode FLOAT() { return getToken(CmmParser.FLOAT, 0); }
-		public TerminalNode STAR() { return getToken(CmmParser.STAR, 0); }
-		public TerminalNode DIV() { return getToken(CmmParser.DIV, 0); }
-		public TerminalNode PLUS() { return getToken(CmmParser.PLUS, 0); }
-		public TerminalNode RELOP() { return getToken(CmmParser.RELOP, 0); }
-		public TerminalNode AND() { return getToken(CmmParser.AND, 0); }
 		public TerminalNode OR() { return getToken(CmmParser.OR, 0); }
-		public TerminalNode ASSIGNOP() { return getToken(CmmParser.ASSIGNOP, 0); }
-		public TerminalNode LB() { return getToken(CmmParser.LB, 0); }
-		public TerminalNode RB() { return getToken(CmmParser.RB, 0); }
-		public TerminalNode DOT() { return getToken(CmmParser.DOT, 0); }
-		public ExpContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_exp; }
+		public ExpOrContext(ExpContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExp(this);
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpOr(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExp(this);
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpOr(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExp(this);
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpOr(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpRelopContext extends ExpContext {
+		public List<ExpContext> exp() {
+			return getRuleContexts(ExpContext.class);
+		}
+		public ExpContext exp(int i) {
+			return getRuleContext(ExpContext.class,i);
+		}
+		public TerminalNode RELOP() { return getToken(CmmParser.RELOP, 0); }
+		public ExpRelopContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpRelop(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpRelop(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpRelop(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpPlusMinusContext extends ExpContext {
+		public List<ExpContext> exp() {
+			return getRuleContexts(ExpContext.class);
+		}
+		public ExpContext exp(int i) {
+			return getRuleContext(ExpContext.class,i);
+		}
+		public TerminalNode PLUS() { return getToken(CmmParser.PLUS, 0); }
+		public TerminalNode MINUS() { return getToken(CmmParser.MINUS, 0); }
+		public ExpPlusMinusContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpPlusMinus(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpPlusMinus(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpPlusMinus(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpAssignopContext extends ExpContext {
+		public List<ExpContext> exp() {
+			return getRuleContexts(ExpContext.class);
+		}
+		public ExpContext exp(int i) {
+			return getRuleContext(ExpContext.class,i);
+		}
+		public TerminalNode ASSIGNOP() { return getToken(CmmParser.ASSIGNOP, 0); }
+		public ExpAssignopContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpAssignop(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpAssignop(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpAssignop(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpParenthesisContext extends ExpContext {
+		public TerminalNode LP() { return getToken(CmmParser.LP, 0); }
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
+		public TerminalNode RP() { return getToken(CmmParser.RP, 0); }
+		public ExpParenthesisContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpParenthesis(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpParenthesis(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpParenthesis(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpFloatContext extends ExpContext {
+		public TerminalNode FLOAT() { return getToken(CmmParser.FLOAT, 0); }
+		public ExpFloatContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpFloat(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpFloat(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpFloat(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpAndContext extends ExpContext {
+		public List<ExpContext> exp() {
+			return getRuleContexts(ExpContext.class);
+		}
+		public ExpContext exp(int i) {
+			return getRuleContext(ExpContext.class,i);
+		}
+		public TerminalNode AND() { return getToken(CmmParser.AND, 0); }
+		public ExpAndContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpAnd(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpAnd(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpAnd(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpFuncArgsContext extends ExpContext {
+		public TerminalNode ID() { return getToken(CmmParser.ID, 0); }
+		public TerminalNode LP() { return getToken(CmmParser.LP, 0); }
+		public ArgsContext args() {
+			return getRuleContext(ArgsContext.class,0);
+		}
+		public TerminalNode RP() { return getToken(CmmParser.RP, 0); }
+		public ExpFuncArgsContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpFuncArgs(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpFuncArgs(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpFuncArgs(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpStarDivContext extends ExpContext {
+		public List<ExpContext> exp() {
+			return getRuleContexts(ExpContext.class);
+		}
+		public ExpContext exp(int i) {
+			return getRuleContext(ExpContext.class,i);
+		}
+		public TerminalNode STAR() { return getToken(CmmParser.STAR, 0); }
+		public TerminalNode DIV() { return getToken(CmmParser.DIV, 0); }
+		public ExpStarDivContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpStarDiv(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpStarDiv(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpStarDiv(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpIntContext extends ExpContext {
+		public TerminalNode INT() { return getToken(CmmParser.INT, 0); }
+		public ExpIntContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpInt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpInt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpInt(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpMinusNotContext extends ExpContext {
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
+		public TerminalNode MINUS() { return getToken(CmmParser.MINUS, 0); }
+		public TerminalNode NOT() { return getToken(CmmParser.NOT, 0); }
+		public ExpMinusNotContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpMinusNot(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpMinusNot(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpMinusNot(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpIdContext extends ExpContext {
+		public TerminalNode ID() { return getToken(CmmParser.ID, 0); }
+		public ExpIdContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpId(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpId(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpId(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExpBracketsContext extends ExpContext {
+		public List<ExpContext> exp() {
+			return getRuleContexts(ExpContext.class);
+		}
+		public ExpContext exp(int i) {
+			return getRuleContext(ExpContext.class,i);
+		}
+		public TerminalNode LB() { return getToken(CmmParser.LB, 0); }
+		public TerminalNode RB() { return getToken(CmmParser.RB, 0); }
+		public ExpBracketsContext(ExpContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).enterExpBrackets(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CmmParserListener ) ((CmmParserListener)listener).exitExpBrackets(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CmmParserVisitor ) return ((CmmParserVisitor<? extends T>)visitor).visitExpBrackets(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1415,6 +1818,10 @@ public class CmmParser extends Parser {
 			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
 			case 1:
 				{
+				_localctx = new ExpFuncArgsContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+
 				setState(193);
 				match(ID);
 				setState(194);
@@ -1427,6 +1834,9 @@ public class CmmParser extends Parser {
 				break;
 			case 2:
 				{
+				_localctx = new ExpFuncContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
 				setState(198);
 				match(ID);
 				setState(199);
@@ -1437,6 +1847,9 @@ public class CmmParser extends Parser {
 				break;
 			case 3:
 				{
+				_localctx = new ExpParenthesisContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
 				setState(201);
 				match(LP);
 				setState(202);
@@ -1447,6 +1860,9 @@ public class CmmParser extends Parser {
 				break;
 			case 4:
 				{
+				_localctx = new ExpMinusNotContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
 				setState(205);
 				_la = _input.LA(1);
 				if ( !(_la==MINUS || _la==NOT) ) {
@@ -1463,18 +1879,27 @@ public class CmmParser extends Parser {
 				break;
 			case 5:
 				{
+				_localctx = new ExpIdContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
 				setState(207);
 				match(ID);
 				}
 				break;
 			case 6:
 				{
+				_localctx = new ExpIntContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
 				setState(208);
 				match(INT);
 				}
 				break;
 			case 7:
 				{
+				_localctx = new ExpFloatContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
 				setState(209);
 				match(FLOAT);
 				}
@@ -1494,7 +1919,7 @@ public class CmmParser extends Parser {
 					switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
 					case 1:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpStarDivContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(212);
 						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
@@ -1514,7 +1939,7 @@ public class CmmParser extends Parser {
 						break;
 					case 2:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpPlusMinusContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(215);
 						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
@@ -1534,7 +1959,7 @@ public class CmmParser extends Parser {
 						break;
 					case 3:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpRelopContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(218);
 						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
@@ -1546,7 +1971,7 @@ public class CmmParser extends Parser {
 						break;
 					case 4:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpAndContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(221);
 						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
@@ -1558,7 +1983,7 @@ public class CmmParser extends Parser {
 						break;
 					case 5:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpOrContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(224);
 						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
@@ -1570,7 +1995,7 @@ public class CmmParser extends Parser {
 						break;
 					case 6:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpAssignopContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(227);
 						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
@@ -1582,7 +2007,7 @@ public class CmmParser extends Parser {
 						break;
 					case 7:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpBracketsContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(230);
 						if (!(precpred(_ctx, 12))) throw new FailedPredicateException(this, "precpred(_ctx, 12)");
@@ -1596,7 +2021,7 @@ public class CmmParser extends Parser {
 						break;
 					case 8:
 						{
-						_localctx = new ExpContext(_parentctx, _parentState);
+						_localctx = new ExpDotContext(new ExpContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_exp);
 						setState(235);
 						if (!(precpred(_ctx, 11))) throw new FailedPredicateException(this, "precpred(_ctx, 11)");

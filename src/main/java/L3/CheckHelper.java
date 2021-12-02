@@ -48,27 +48,11 @@ public class CheckHelper {
         return firstMember == null && secondMember == null;
     }
 
-    public static boolean isParamEqual(FieldList first, FieldList second) {
+    public static boolean isFieldListEqual(FieldList first, FieldList second) {
         while (first != null && second != null && isTypeEqual(first.getType(), second.getType())) {
             first = first.getNext();
             second = second.getNext();
         }
         return first == null && second == null;
-    }
-
-    public static boolean isLeftExp(CmmParser.ExpContext ctx) {
-        if (ctx.getChildCount() == 1 && ctx.ID() != null) {
-            return true;
-        }
-        if (ctx.LB() != null) {
-            return true;
-        }
-        if (ctx.DOT() != null) {
-            return true;
-        }
-        if (ctx.LP() != null && ctx.exp().size() != 0) {
-            return isLeftExp(ctx.exp(0));
-        }
-        return false;
     }
 }
