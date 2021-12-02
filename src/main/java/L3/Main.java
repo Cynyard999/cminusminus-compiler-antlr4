@@ -16,14 +16,12 @@ import org.antlr.v4.runtime.tree.ParseTree;
  */
 public class Main {
     public static void main(String[] args) throws Exception {
-
         InputStream is = System.in;
         if (args.length > 0) {
             String inputFile = args[0];
             is = new FileInputStream(inputFile);
         }
         CharStream input = CharStreams.fromStream(is);
-
         CmmLexer lexer = new CmmLexer(input);
         lexer.removeErrorListeners();
         lexer.addErrorListener(new CustomErrorListener());
@@ -33,19 +31,17 @@ public class Main {
         } else {
             return;
         }
-
         lexer.reset();
         FlagHelper.currentLine = -1;
-
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CmmParser parser = new CmmParser(tokenStream);
         parser.removeErrorListeners();
         parser.addErrorListener(new CustomErrorListener());
         ParseTree tree = parser.program();
-//        System.out.println(tree.getClass().getName());
-//        System.out.println(tree.toStringTree(parser));
-        if (parser.getNumberOfSyntaxErrors() == 0) {
-            CmmTreeAnalyzer visitor = new CmmTreeAnalyzer();
+        if (!FlagHelper.hasSyntaxError) {
+//            CmmVisitor visitor = new CmmVisitor();
+//            visitor.visit(tree);
+            CmmSemanticAnalyzer visitor = new CmmSemanticAnalyzer();
             visitor.visit(tree);
         }
     }

@@ -8,5 +8,6 @@ package L3;
 public class FlagHelper {
     static boolean hasLexicalError = false;
     static boolean hasSyntaxError = false;
+    static boolean hasSemanticError = false;
     static int currentLine = -1;
 }

@@ -1,6 +1,5 @@
 package L3;
 
-import L3.CmmParser.ExpContext;
 import java.util.Stack;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -9,7 +8,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * @description
  * @date 12/1/21
  */
-public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
+public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     HashTable table = HashTable.getHashTable();
     // Only the function that pushes can pop and called sub_function just uses peek to get needed element
@@ -96,11 +95,10 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
         if (table.checkDuplicate(fieldList.getName())) {
             if (ctx.inStruct) {
                 printError(ErrorType.REDEF_FEILD, ctx.ID(0).getSymbol().getLine());
-                return defaultResult();
             } else {
                 printError(ErrorType.REDEF_VAR, ctx.ID(0).getSymbol().getLine());
-                return defaultResult();
             }
+            return defaultResult();
         }
         if (ctx.getChildCount() > 1) {
             Array firstArray = new Array();
@@ -393,7 +391,7 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
         return checkArithmeticOperation(ctx.exp(0), ctx.exp(1), (TerminalNode) ctx.getChild(1));
     }
 
-    private Returnable checkArithmeticOperation(ExpContext exp, ExpContext exp2,
+    private Returnable checkArithmeticOperation(CmmParser.ExpContext exp, CmmParser.ExpContext exp2,
             TerminalNode operand) {
         Type firstExp = (Type) visit(exp);
         Type secondExp = (Type) visit(exp2);
@@ -449,7 +447,7 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
         return checkLogicalOperation(ctx.exp(0), ctx.exp(1));
     }
 
-    private Returnable checkLogicalOperation(ExpContext exp, ExpContext exp2) {
+    private Returnable checkLogicalOperation(CmmParser.ExpContext exp, CmmParser.ExpContext exp2) {
         Type firstExp = (Type) visit(exp);
         Type secondExp = (Type) visit(exp2);
         if (firstExp == null || secondExp == null) {
@@ -525,6 +523,7 @@ public class CmmTreeAnalyzer extends CmmParserBaseVisitor<Returnable> {
     }
 
     private void printError(ErrorType errorType, int lineNo) {
+        FlagHelper.hasSemanticError = true;
         System.err.println("Error type " + errorType.getErrorNo() + " at Line " + lineNo
                 + " : " + errorType.getErrorMsg());
     }
