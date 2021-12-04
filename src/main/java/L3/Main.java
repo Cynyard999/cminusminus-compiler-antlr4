@@ -22,15 +22,17 @@ public class Main {
             is = new FileInputStream(inputFile);
         }
         CharStream input = CharStreams.fromStream(is);
+        // BEGIN LEXICAL PART
         CmmLexer lexer = new CmmLexer(input);
         lexer.removeErrorListeners();
         lexer.addErrorListener(new CustomErrorListener());
         List<? extends Token> allTokens = lexer.getAllTokens();
         if (!FlagHelper.hasLexicalError) {
-            //printTokens(allTokens);
+//            OutputHelper.printTokens(allTokens);
         } else {
             return;
         }
+        // BEGIN SYNTAX PART
         lexer.reset();
         FlagHelper.currentLine = -1;
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
@@ -39,38 +41,15 @@ public class Main {
         parser.addErrorListener(new CustomErrorListener());
         ParseTree tree = parser.program();
         if (!FlagHelper.hasSyntaxError) {
-//            CmmVisitor visitor = new CmmVisitor();
-//            visitor.visit(tree);
-            CmmSemanticAnalyzer visitor = new CmmSemanticAnalyzer();
-            visitor.visit(tree);
+//            CmmVisitor cmmVisitor = new CmmVisitor();
+//            cmmVisitor.visit(tree);
         }
-    }
-
-    public static void printTokens(List<? extends Token> allTokens) {
-        for (Token token : allTokens) {
-            if (token.getType() >= 1) {
-                String tokenText = getTokenText(token);
-                System.err.println(
-                        CmmLexer.ruleNames[token.getType() - 1] + " " + tokenText + " at Line "
-                                + token.getLine() + ".");
-            }
+        else {
+            return;
         }
-    }
+        // BEGIN SEMANTIC PART
+        CmmSemanticAnalyzer cmmSemanticAnalyzer = new CmmSemanticAnalyzer();
+        cmmSemanticAnalyzer.visit(tree);
 
-    public static String getTokenText(Token token) {
-        final String tokenText = token.getText();
-        if (token.getType() == CmmLexer.INT) {
-            if (tokenText.length() >= 2 && tokenText.charAt(0) == '0') {
-                if (tokenText.charAt(1) == 'x' || tokenText.charAt(1) == 'X') {
-                    return String.valueOf(Integer.valueOf(tokenText.substring(2), 16));
-                } else if (tokenText.charAt(1) >= '0' && tokenText.charAt(1) <= '7') {
-                    return String.valueOf(Integer.valueOf(tokenText.substring(1), 8));
-                }
-            }
-        } else if (token.getType() == CmmLexer.FLOAT) {
-            return String.format("%.6f", Double.parseDouble(tokenText));
-        }
-        return tokenText;
     }
-
 }

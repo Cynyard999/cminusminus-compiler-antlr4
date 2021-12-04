@@ -33,7 +33,7 @@ struct A{
 } a(){
     struct B{
         int j;
-        float m,n,k;
+        float m,n,i,k;
     } b;
     b.j = 1;
     return b;

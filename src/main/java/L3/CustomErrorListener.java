@@ -17,17 +17,9 @@ public class CustomErrorListener extends BaseErrorListener {
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
             int charPositionInLine, String msg, RecognitionException e) {
         if (e instanceof LexerNoViableAltException) {
-            FlagHelper.hasLexicalError = true;
-            if (FlagHelper.currentLine < line) {
-                System.err.println("Error type A at Line " + line + ": " + msg);
-                FlagHelper.currentLine = line;
-            }
+            OutputHelper.printLexicalError(line, msg);
         } else {
-            FlagHelper.hasSyntaxError = true;
-            if (FlagHelper.currentLine < line) {
-                System.err.println("Error type B at Line " + line + ": " + msg);
-                FlagHelper.currentLine = line;
-            }
+            OutputHelper.printSyntaxError(line, msg);
         }
     }
 }
