@@ -8,6 +8,7 @@ package L3;
 public class HashTable {
 
     private static class HashNode {
+
         String name;
         Type type;
         HashNode next;
@@ -17,7 +18,8 @@ public class HashTable {
     private static final HashNode[] TABLE = new HashNode[HASH_TABLE_SIZE];
     private static HashTable hashTable;
 
-    private HashTable() {}
+    private HashTable() {
+    }
 
     public static HashTable getHashTable() {
         if (hashTable == null) {

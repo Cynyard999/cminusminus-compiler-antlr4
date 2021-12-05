@@ -6,6 +6,7 @@ package L3;
  * @date 11/24/21
  */
 public class FlagHelper {
+
     static boolean hasLexicalError = false;
     static boolean hasSyntaxError = false;
     static boolean hasSemanticError = false;

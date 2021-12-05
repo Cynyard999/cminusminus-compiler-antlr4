@@ -45,3 +45,9 @@ struct A{
 为什么不用visitXXX而是使用visit呢，因为如果加上了alias，你并不知道visit哪个
 
 只有浮点数和int才能赋值？
+
+if else那里 如果exp错了 stmt还是要继续检查的
+
+错误可以针对null pointer这样，就看上一层有没有处理
+
+vardec本身不会添加节点 需要父节点添加

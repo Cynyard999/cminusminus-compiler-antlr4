@@ -41,7 +41,12 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     @Override
     public Returnable visitExtDecList(CmmParser.ExtDecListContext ctx) {
-        visitChildren(ctx);
+        for (CmmParser.VarDecContext varDecContext : ctx.varDec()) {
+            FieldList varDec = (FieldList) visit(varDecContext);
+            if (varDec != null) {
+                table.addNode(varDec.getType(), varDec.getName());
+            }
+        }
         return defaultResult();
     }
 
@@ -97,7 +102,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         if (table.checkDuplicate(fieldList.getName())) {
             if (ctx.inStruct) {
                 OutputHelper
-                        .printSemanticError(ErrorType.REDEF_FEILD, ctx.ID(0).getSymbol().getLine(),
+                        .printSemanticError(ErrorType.REDEF_FIELD, ctx.ID(0).getSymbol().getLine(),
                                 ctx.ID(0).getText());
             } else {
                 OutputHelper
@@ -199,6 +204,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitStmtReturn(CmmParser.StmtReturnContext ctx) {
         Type exp = (Type) visit(ctx.exp());
+        if (exp == null) {
+            return defaultResult();
+        }
         Type returnType = typeStack.peek();
         if (!CheckHelper.isTypeEqual(exp, returnType)) {
             OutputHelper
@@ -210,10 +218,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitStmtIf(CmmParser.StmtIfContext ctx) {
         Type exp = (Type) visit(ctx.exp());
-        if (exp == null) {
-            return defaultResult();
-        }
-        if (exp.getKind() != Kind.INT) {
+        if (exp != null && exp.getKind() != Kind.INT) {
             OutputHelper
                     .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
         }
@@ -225,7 +230,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitStmtIfElse(CmmParser.StmtIfElseContext ctx) {
         Type exp = (Type) visit(ctx.exp());
-        if (exp.getKind() != Kind.INT) {
+        if (exp != null && exp.getKind() != Kind.INT) {
             OutputHelper
                     .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
         }
@@ -238,7 +243,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitStmtWhile(CmmParser.StmtWhileContext ctx) {
         Type exp = (Type) visit(ctx.exp());
-        if (exp.getKind() != Kind.INT) {
+        if (exp != null && exp.getKind() != Kind.INT) {
             OutputHelper
                     .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
         }
@@ -297,8 +302,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         if (ctx.getChildCount() > 1) {
             // if in struct there is ASSIGNOP, do not visit varDec
             if (ctx.inStruct) {
-                OutputHelper.printSemanticError(ErrorType.REDEF_FEILD,
-                        ctx.ASSIGNOP().getSymbol().getLine(), ctx.ASSIGNOP().getText());
+                OutputHelper.printSemanticError(ErrorType.REDEF_FIELD,
+                        ctx.ASSIGNOP().getSymbol().getLine(), ctx.varDec().getText());
                 return defaultResult();
             }
             varDec = (FieldList) visit(ctx.varDec());
@@ -398,7 +403,10 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitExpMinusNot(CmmParser.ExpMinusNotContext ctx) {
         Type exp = (Type) visit(ctx.exp());
-        if (exp.getKind() != Kind.INT || exp.getKind() != Kind.FLOAT) {
+        if (exp == null) {
+            return defaultResult();
+        }
+        if (exp.getKind() != Kind.INT && exp.getKind() != Kind.FLOAT) {
             OutputHelper
                     .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
             return defaultResult();

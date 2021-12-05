@@ -24,9 +24,7 @@ structSpecifier: STRUCT optTag LC defList[true] RC
   | STRUCT tag
   ;
 
-optTag: ID
-  |
-  ;
+optTag: ID?;
 
 tag: ID;
 

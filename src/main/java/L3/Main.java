@@ -15,6 +15,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
  * @date 12/1/21
  */
 public class Main {
+
     public static void main(String[] args) throws Exception {
         InputStream is = System.in;
         if (args.length > 0) {
@@ -43,8 +44,7 @@ public class Main {
         if (!FlagHelper.hasSyntaxError) {
 //            CmmVisitor cmmVisitor = new CmmVisitor();
 //            cmmVisitor.visit(tree);
-        }
-        else {
+        } else {
             return;
         }
         // BEGIN SEMANTIC PART

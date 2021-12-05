@@ -6,6 +6,7 @@ package L3;
  * @date 12/1/21
  */
 public class Structure extends Type {
+
     private String name;
     private FieldList memberList;
 
