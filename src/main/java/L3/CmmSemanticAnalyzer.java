@@ -62,7 +62,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             structure.setMemberList((FieldList) visit(ctx.defList()));
             if ((structure.getName() != null) && (!structure.getName().isEmpty())) {
                 if (table.checkDuplicate(structure.getName())) {
-                    OutputHelper.printSemanticError(ErrorType.DUPLIC_STRUCT, ctx.getStart().getLine());
+                    OutputHelper
+                            .printSemanticError(ErrorType.DUPLIC_STRUCT, ctx.getStart().getLine());
                     return defaultResult();
                 }
                 table.addNode(structure, structure.getName());
@@ -71,7 +72,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         } else {
             Type type = table.getType(ctx.tag().getText());
             if (type == null) {
-                OutputHelper.printSemanticError(ErrorType.UNDEF_STRUCT, ctx.getStart().getLine());
+                OutputHelper.printSemanticError(ErrorType.UNDEF_STRUCT, ctx.getStart().getLine(),
+                        ctx.tag().getText());
             }
             return type;
         }
@@ -94,9 +96,13 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         fieldList.setName(ctx.ID(0).getText());
         if (table.checkDuplicate(fieldList.getName())) {
             if (ctx.inStruct) {
-                OutputHelper.printSemanticError(ErrorType.REDEF_FEILD, ctx.ID(0).getSymbol().getLine());
+                OutputHelper
+                        .printSemanticError(ErrorType.REDEF_FEILD, ctx.ID(0).getSymbol().getLine(),
+                                ctx.ID(0).getText());
             } else {
-                OutputHelper.printSemanticError(ErrorType.REDEF_VAR, ctx.ID(0).getSymbol().getLine());
+                OutputHelper
+                        .printSemanticError(ErrorType.REDEF_VAR, ctx.ID(0).getSymbol().getLine(),
+                                ctx.ID(0).getText());
             }
             return defaultResult();
         }
@@ -127,7 +133,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         function.setName(ctx.ID().getText());
         // just dump duplicate func
         if (table.checkDuplicate(function.getName())) {
-            OutputHelper.printSemanticError(ErrorType.REDEF_FUNC, ctx.getStart().getLine());
+            OutputHelper.printSemanticError(ErrorType.REDEF_FUNC, ctx.getStart().getLine(),
+                    function.getName());
             return defaultResult();
         }
         function.setReturnType(type);
@@ -194,7 +201,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         Type exp = (Type) visit(ctx.exp());
         Type returnType = typeStack.peek();
         if (!CheckHelper.isTypeEqual(exp, returnType)) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_RETURN, ctx.exp().getStart().getLine());
+            OutputHelper
+                    .printSemanticError(ErrorType.MISMATCH_RETURN, ctx.exp().getStart().getLine());
         }
         return defaultResult();
     }
@@ -206,7 +214,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             return defaultResult();
         }
         if (exp.getKind() != Kind.INT) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
+            OutputHelper
+                    .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
         }
         // continue to visit stmt, despite error occurring
         visit(ctx.stmt());
@@ -217,7 +226,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     public Returnable visitStmtIfElse(CmmParser.StmtIfElseContext ctx) {
         Type exp = (Type) visit(ctx.exp());
         if (exp.getKind() != Kind.INT) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
+            OutputHelper
+                    .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
         }
         // continue to visit stmt, despite error occurring
         visit(ctx.stmt(0));
@@ -229,7 +239,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     public Returnable visitStmtWhile(CmmParser.StmtWhileContext ctx) {
         Type exp = (Type) visit(ctx.exp());
         if (exp.getKind() != Kind.INT) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
+            OutputHelper
+                    .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
         }
         // continue to visit stmt, despite error occurring
         visit(ctx.stmt());
@@ -286,17 +297,18 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         if (ctx.getChildCount() > 1) {
             // if in struct there is ASSIGNOP, do not visit varDec
             if (ctx.inStruct) {
-                OutputHelper.printSemanticError(ErrorType.REDEF_FEILD, ctx.ASSIGNOP().getSymbol().getLine());
+                OutputHelper.printSemanticError(ErrorType.REDEF_FEILD,
+                        ctx.ASSIGNOP().getSymbol().getLine(), ctx.ASSIGNOP().getText());
                 return defaultResult();
             }
             varDec = (FieldList) visit(ctx.varDec());
             Type exp = (Type) visit(ctx.exp());
             if (varDec != null && !CheckHelper.isTypeEqual(varDec.getType(), exp)) {
-                OutputHelper.printSemanticError(ErrorType.MISMATCH_ASSIGN, ctx.exp().getStart().getLine());
+                OutputHelper.printSemanticError(ErrorType.MISMATCH_ASSIGN,
+                        ctx.exp().getStart().getLine());
                 return defaultResult();
             }
-        }
-        else {
+        } else {
             varDec = (FieldList) visit(ctx.varDec());
         }
         // add to symbol table until
@@ -310,22 +322,26 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     public Returnable visitExpFuncArgs(CmmParser.ExpFuncArgsContext ctx) {
         Type func = table.getType(ctx.ID().getText());
         if (func == null) {
-            OutputHelper.printSemanticError(ErrorType.UNDEF_FUNC, ctx.ID().getSymbol().getLine());
+            OutputHelper.printSemanticError(ErrorType.UNDEF_FUNC, ctx.ID().getSymbol().getLine(),
+                    ctx.ID().getText());
             return defaultResult();
         }
         if (func.getKind() != Kind.FUNCTION) {
-            OutputHelper.printSemanticError(ErrorType.NON_FUNC, ctx.ID().getSymbol().getLine());
+            OutputHelper.printSemanticError(ErrorType.NON_FUNC, ctx.ID().getSymbol().getLine(),
+                    ctx.ID().getText());
             return defaultResult();
         }
         if (ctx.args() == null) {
             if (((Function) func).getParamList() != null) {
-                OutputHelper.printSemanticError(ErrorType.MISMATCH_PARAM, ctx.LP().getSymbol().getLine());
+                OutputHelper.printSemanticError(ErrorType.MISMATCH_PARAM,
+                        ctx.LP().getSymbol().getLine());
                 return defaultResult();
             }
         } else {
             FieldList args = (FieldList) visit(ctx.args());
             if (!CheckHelper.isFieldListEqual(((Function) func).getParamList(), args)) {
-                OutputHelper.printSemanticError(ErrorType.MISMATCH_PARAM, ctx.LP().getSymbol().getLine());
+                OutputHelper.printSemanticError(ErrorType.MISMATCH_PARAM,
+                        ctx.LP().getSymbol().getLine());
                 return defaultResult();
             }
         }
@@ -345,11 +361,13 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             return defaultResult();
         }
         if (array.getKind() != Kind.ARRAY) {
-            OutputHelper.printSemanticError(ErrorType.NON_ARRAY, ctx.exp(0).getStart().getLine());
+            OutputHelper.printSemanticError(ErrorType.NON_ARRAY, ctx.exp(0).getStart().getLine(),
+                    ctx.exp(0).getText());
             return defaultResult();
         }
         if (index.getKind() != Kind.INT) {
-            OutputHelper.printSemanticError(ErrorType.NON_INT, ctx.exp(0).getStart().getLine());
+            OutputHelper.printSemanticError(ErrorType.NON_INT, ctx.exp(0).getStart().getLine(),
+                    ctx.exp(0).getText());
             return defaultResult();
         }
         return ((Array) array).getElements();
@@ -372,7 +390,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             }
             memberList = memberList.getNext();
         }
-        OutputHelper.printSemanticError(ErrorType.UNDEF_FIELD, ctx.ID().getSymbol().getLine());
+        OutputHelper.printSemanticError(ErrorType.UNDEF_FIELD, ctx.ID().getSymbol().getLine(),
+                ctx.ID().getText());
         return defaultResult();
     }
 
@@ -380,7 +399,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     public Returnable visitExpMinusNot(CmmParser.ExpMinusNotContext ctx) {
         Type exp = (Type) visit(ctx.exp());
         if (exp.getKind() != Kind.INT || exp.getKind() != Kind.FLOAT) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
+            OutputHelper
+                    .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp().getStart().getLine());
             return defaultResult();
         }
         return exp;
@@ -427,11 +447,13 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             return defaultResult();
         }
         if (firstExp.getKind() != Kind.INT && firstExp.getKind() != Kind.FLOAT) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp(0).getStart().getLine());
+            OutputHelper
+                    .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp(0).getStart().getLine());
             return defaultResult();
         }
         if (secondExp.getKind() != Kind.INT && firstExp.getKind() != Kind.FLOAT) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp(1).getStart().getLine());
+            OutputHelper
+                    .printSemanticError(ErrorType.MISMATCH_OPRAND, ctx.exp(1).getStart().getLine());
             return defaultResult();
         }
         if (firstExp.getKind() != secondExp.getKind()) {
@@ -481,7 +503,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             return defaultResult();
         }
         if (!CheckHelper.isTypeEqual(firstExp, secondExp)) {
-            OutputHelper.printSemanticError(ErrorType.MISMATCH_ASSIGN, ctx.ASSIGNOP().getSymbol().getLine());
+            OutputHelper.printSemanticError(ErrorType.MISMATCH_ASSIGN,
+                    ctx.ASSIGNOP().getSymbol().getLine());
             return defaultResult();
         }
         return firstExp;
@@ -491,7 +514,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     public Returnable visitExpId(CmmParser.ExpIdContext ctx) {
         Type ID = table.getType(ctx.ID().getText());
         if (ID == null) {
-            OutputHelper.printSemanticError(ErrorType.UNDEF_VAR, ctx.ID().getSymbol().getLine());
+            OutputHelper.printSemanticError(ErrorType.UNDEF_VAR, ctx.ID().getSymbol().getLine(),
+                    ctx.ID().getText());
             return defaultResult();
         }
         return ID;
