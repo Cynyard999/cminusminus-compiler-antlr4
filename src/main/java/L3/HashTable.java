@@ -1,5 +1,6 @@
 package L3;
 
+
 /**
  * @author cynyard
  * @description
@@ -8,12 +9,10 @@ package L3;
 public class HashTable {
 
     private static class HashNode {
-
         String name;
         Type type;
         HashNode next;
     }
-
     private static final int HASH_TABLE_SIZE = 0x3fff;
     private static final HashNode[] TABLE = new HashNode[HASH_TABLE_SIZE];
     private static HashTable hashTable;
@@ -28,7 +27,7 @@ public class HashTable {
         return hashTable;
     }
 
-    private int getHashCode(String name) {
+    private int getHashIndex(String name) {
         int val = 0, i;
         for (char c : name.toCharArray()) {
             val = (val << 2) + (int) c;
@@ -40,7 +39,7 @@ public class HashTable {
     }
 
     public Type getType(String name) {
-        int index = getHashCode(name);
+        int index = getHashIndex(name);
         HashNode node = TABLE[index];
         while (node != null) {
             if (node.name.equals(name)) {
@@ -56,7 +55,7 @@ public class HashTable {
         newNode.type = type;
         newNode.name = name;
         newNode.next = null;
-        int index = getHashCode(name);
+        int index = getHashIndex(name);
         if (TABLE[index] == null) {
             TABLE[index] = newNode;
             return;
@@ -69,7 +68,7 @@ public class HashTable {
     }
 
     public void removeNode(String name) {
-        int index = getHashCode(name);
+        int index = getHashIndex(name);
         if (TABLE[index] == null) {
             return;
         }
@@ -88,7 +87,7 @@ public class HashTable {
     }
 
     public boolean checkDuplicate(String name) {
-        HashNode node = TABLE[getHashCode(name)];
+        HashNode node = TABLE[getHashIndex(name)];
         while (node != null) {
             if (node.name.equals(name)) {
                 return true;

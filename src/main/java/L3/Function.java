@@ -7,20 +7,11 @@ package L3;
  */
 public class Function extends Type {
 
-    private String name;
     private Type returnType;
     private FieldList paramList;
 
     public Function() {
         setKind(Kind.FUNCTION);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public Type getReturnType() {

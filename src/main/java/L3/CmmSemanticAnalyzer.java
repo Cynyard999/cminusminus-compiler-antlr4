@@ -63,15 +63,15 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     public Returnable visitStructSpecifier(CmmParser.StructSpecifierContext ctx) {
         Structure structure = new Structure();
         if (ctx.defList() != null) {
-            structure.setName(ctx.optTag().getText());
+            String structureName = ctx.optTag().getText();
             structure.setMemberList((FieldList) visit(ctx.defList()));
-            if ((structure.getName() != null) && (!structure.getName().isEmpty())) {
-                if (table.checkDuplicate(structure.getName())) {
+            if ((structureName != null) && (!structureName.isEmpty())) {
+                if (table.checkDuplicate(structureName)) {
                     OutputHelper
                             .printSemanticError(ErrorType.DUPLIC_STRUCT, ctx.getStart().getLine());
                     return defaultResult();
                 }
-                table.addNode(structure, structure.getName());
+                table.addNode(structure, structureName);
             }
             return structure;
         } else {
@@ -135,18 +135,18 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     public Returnable visitFunDec(CmmParser.FunDecContext ctx) {
         Type type = typeStack.peek();
         Function function = new Function();
-        function.setName(ctx.ID().getText());
+        String functionName = ctx.ID().getText();
         // just dump duplicate func
-        if (table.checkDuplicate(function.getName())) {
+        if (table.checkDuplicate(functionName)) {
             OutputHelper.printSemanticError(ErrorType.REDEF_FUNC, ctx.getStart().getLine(),
-                    function.getName());
+                    functionName);
             return defaultResult();
         }
         function.setReturnType(type);
         if (ctx.varList() != null) {
             function.setParamList((FieldList) visit(ctx.varList()));
         }
-        table.addNode(function, function.getName());
+        table.addNode(function, functionName);
         return function;
     }
 
@@ -172,7 +172,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         typeStack.push(specifier);
         FieldList param = (FieldList) visit(ctx.varDec());
         typeStack.pop();
-        table.addNode(param.getType(), param.getName());
+        if (param != null) {
+            table.addNode(param.getType(), param.getName());
+        }
         return param;
     }
 
@@ -308,6 +310,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             }
             varDec = (FieldList) visit(ctx.varDec());
             Type exp = (Type) visit(ctx.exp());
+            if (exp == null) {
+                return defaultResult();
+            }
             if (varDec != null && !CheckHelper.isTypeEqual(varDec.getType(), exp)) {
                 OutputHelper.printSemanticError(ErrorType.MISMATCH_ASSIGN,
                         ctx.exp().getStart().getLine());
