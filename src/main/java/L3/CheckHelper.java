@@ -1,7 +1,4 @@
 package L3;
-
-import L3.CmmParser.ExpParenthesisContext;
-
 /**
  * @author cynyard
  * @description help to check
@@ -69,7 +66,7 @@ public class CheckHelper {
             return true;
         }
         if (ctx instanceof CmmParser.ExpParenthesisContext) {
-            return isLeftExp(((ExpParenthesisContext) ctx).exp());
+            return isLeftExp(((CmmParser.ExpParenthesisContext) ctx).exp());
         }
         return false;
     }

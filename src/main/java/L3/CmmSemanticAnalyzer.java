@@ -12,7 +12,7 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
 
     HashTable table = HashTable.getHashTable();
     // Only the function that pushes can pop and called sub_function just uses peek to get needed element
-    Deque<Type> typeStack = new LinkedList<>();
+    Deque<Type> typeStack = new ArrayDeque<>();
 
 
     @Override

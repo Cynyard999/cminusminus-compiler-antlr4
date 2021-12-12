@@ -50,6 +50,5 @@ public class Main {
         // BEGIN SEMANTIC PART
         CmmSemanticAnalyzer cmmSemanticAnalyzer = new CmmSemanticAnalyzer();
         cmmSemanticAnalyzer.visit(tree);
-
     }
 }
