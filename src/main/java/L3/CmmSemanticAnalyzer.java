@@ -24,6 +24,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitExtDef(CmmParser.ExtDefContext ctx) {
         Type specifier = (Type) visit(ctx.specifier());
+        if (specifier == null) {
+            return defaultResult();
+        }
         typeStack.push(specifier);
         if (ctx.extDecList() != null) {
             visit(ctx.extDecList());
@@ -64,21 +67,30 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         Structure structure = new Structure();
         if (ctx.defList() != null) {
             String structureName = ctx.optTag().getText();
-            structure.setMemberList((FieldList) visit(ctx.defList()));
+            structure.setName(structureName);
             if ((structureName != null) && (!structureName.isEmpty())) {
+                // if struct name is duplicate skip this struct
                 if (table.checkDuplicate(structureName)) {
                     OutputHelper
-                            .printSemanticError(ErrorType.DUPLIC_STRUCT, ctx.getStart().getLine());
+                            .printSemanticError(ErrorType.DUPLIC_STRUCT, ctx.getStart().getLine(),structureName);
                     return defaultResult();
                 }
                 table.addNode(structure, structureName);
             }
+            structure.setMemberList((FieldList) visit(ctx.defList()));
             return structure;
         } else {
             Type type = table.getType(ctx.tag().getText());
             if (type == null) {
                 OutputHelper.printSemanticError(ErrorType.UNDEF_STRUCT, ctx.getStart().getLine(),
                         ctx.tag().getText());
+                return defaultResult();
+            }
+            if (!((Structure) type).getName().equals(ctx.tag().getText())) {
+                // tag is not a structure name but a variable name whose type is structure
+                OutputHelper.printSemanticError(ErrorType.UNDEF_STRUCT, ctx.getStart().getLine(),
+                        ctx.tag().getText());
+                return defaultResult();
             }
             return type;
         }
@@ -169,6 +181,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitParamDec(CmmParser.ParamDecContext ctx) {
         Type specifier = (Type) visit(ctx.specifier());
+        if (specifier == null) {
+            return defaultResult();
+        }
         typeStack.push(specifier);
         FieldList param = (FieldList) visit(ctx.varDec());
         typeStack.pop();
@@ -276,6 +291,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
     @Override
     public Returnable visitDef(CmmParser.DefContext ctx) {
         Type specifier = (Type) visit(ctx.specifier());
+        if (specifier == null) {
+            return defaultResult();
+        }
         typeStack.push(specifier);
         FieldList fieldList = (FieldList) visit(ctx.decList());
         typeStack.pop();
@@ -311,9 +329,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             varDec = (FieldList) visit(ctx.varDec());
             Type exp = (Type) visit(ctx.exp());
             if (exp == null) {
-                return defaultResult();
-            }
-            if (varDec != null && !CheckHelper.isTypeEqual(varDec.getType(), exp)) {
+                // 跳过类型检查
+            } else if (varDec != null && !CheckHelper.isTypeEqual(varDec.getType(), exp)) {
                 OutputHelper.printSemanticError(ErrorType.MISMATCH_ASSIGN,
                         ctx.exp().getStart().getLine());
                 return defaultResult();
@@ -349,6 +366,9 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             }
         } else {
             FieldList args = (FieldList) visit(ctx.args());
+            if (args == null) {
+                return defaultResult();
+            }
             if (!CheckHelper.isFieldListEqual(((Function) func).getParamList(), args)) {
                 OutputHelper.printSemanticError(ErrorType.MISMATCH_PARAM,
                         ctx.LP().getSymbol().getLine());
@@ -511,8 +531,14 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         if (firstExp == null || secondExp == null) {
             return defaultResult();
         }
+        // check exp
         if (!CheckHelper.isLeftExp(ctx.exp(0))) {
-            OutputHelper.printSemanticError(ErrorType.EXP_ASSIGN, ctx.exp(0).getStart().getLine());
+            OutputHelper.printSemanticError(ErrorType.NOT_LETF_EXP_ASSIGN, ctx.exp(0).getStart().getLine());
+            return defaultResult();
+        }
+        // check type
+        if (firstExp.getKind() == Kind.FUNCTION) {
+            OutputHelper.printSemanticError(ErrorType.NOT_LETF_EXP_ASSIGN, ctx.exp(0).getStart().getLine());
             return defaultResult();
         }
         if (!CheckHelper.isTypeEqual(firstExp, secondExp)) {

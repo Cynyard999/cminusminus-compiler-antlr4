@@ -17,7 +17,7 @@ public enum ErrorType {
     // Mismatched Types Assigned
     MISMATCH_ASSIGN(5, "Type mismatched for assignment."),
     // Right-Value Expression Assigned
-    EXP_ASSIGN(6, "The left-hand side of an assignment must be a variable."),
+    NOT_LETF_EXP_ASSIGN(6, "The left-hand side of an assignment must be a variable."),
     // Mismatched Types for Operands.
     MISMATCH_OPRAND(7, "Type mismatched for operands."),
     // Mismatched Return Type
@@ -37,7 +37,7 @@ public enum ErrorType {
     // Redefined Field
     REDEF_FIELD(15, "Redefined field: %s."),
     // Duplicate Structure Name
-    DUPLIC_STRUCT(16, "Duplicated name: %s."),
+    DUPLIC_STRUCT(16, "Duplicate struct name: %s."),
     // Undefined Structure
     UNDEF_STRUCT(17, "Undefined structure: %s.");
     private final int errorNo;

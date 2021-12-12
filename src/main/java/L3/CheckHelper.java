@@ -65,6 +65,9 @@ public class CheckHelper {
         if (ctx instanceof  CmmParser.ExpBracketsContext){
             return true;
         }
+        if (ctx instanceof CmmParser.ExpAssignopContext){
+            return isLeftExp(((CmmParser.ExpAssignopContext) ctx).exp(0));
+        }
         if (ctx instanceof CmmParser.ExpParenthesisContext) {
             return isLeftExp(((CmmParser.ExpParenthesisContext) ctx).exp());
         }
