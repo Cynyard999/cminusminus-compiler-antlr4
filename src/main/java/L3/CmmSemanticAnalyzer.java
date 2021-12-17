@@ -72,7 +72,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
                 // if struct name is duplicate skip this struct
                 if (table.checkDuplicate(structureName)) {
                     OutputHelper
-                            .printSemanticError(ErrorType.DUPLIC_STRUCT, ctx.getStart().getLine(),structureName);
+                            .printSemanticError(ErrorType.DUPLIC_STRUCT, ctx.getStart().getLine(),
+                                    structureName);
                     return defaultResult();
                 }
                 table.addNode(structure, structureName);
@@ -82,6 +83,11 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         } else {
             Type type = table.getType(ctx.tag().getText());
             if (type == null) {
+                OutputHelper.printSemanticError(ErrorType.UNDEF_STRUCT, ctx.getStart().getLine(),
+                        ctx.tag().getText());
+                return defaultResult();
+            }
+            if (type.getKind() != Kind.STRUCTURE) {
                 OutputHelper.printSemanticError(ErrorType.UNDEF_STRUCT, ctx.getStart().getLine(),
                         ctx.tag().getText());
                 return defaultResult();
@@ -533,12 +539,14 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
         }
         // check exp
         if (!CheckHelper.isLeftExp(ctx.exp(0))) {
-            OutputHelper.printSemanticError(ErrorType.NOT_LETF_EXP_ASSIGN, ctx.exp(0).getStart().getLine());
+            OutputHelper.printSemanticError(ErrorType.NOT_LETF_EXP_ASSIGN,
+                    ctx.exp(0).getStart().getLine());
             return defaultResult();
         }
         // check type
         if (firstExp.getKind() == Kind.FUNCTION) {
-            OutputHelper.printSemanticError(ErrorType.NOT_LETF_EXP_ASSIGN, ctx.exp(0).getStart().getLine());
+            OutputHelper.printSemanticError(ErrorType.NOT_LETF_EXP_ASSIGN,
+                    ctx.exp(0).getStart().getLine());
             return defaultResult();
         }
         if (!CheckHelper.isTypeEqual(firstExp, secondExp)) {
