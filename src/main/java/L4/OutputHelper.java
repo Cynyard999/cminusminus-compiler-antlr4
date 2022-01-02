@@ -1,5 +1,6 @@
 package L4;
 
+import java.io.PrintStream;
 import java.util.List;
 import org.antlr.v4.runtime.Token;
 
@@ -10,11 +11,23 @@ import org.antlr.v4.runtime.Token;
  */
 public class OutputHelper {
 
+    private static PrintStream output = System.out;
+
+    public static void setOutput(PrintStream output) {
+        OutputHelper.output.flush();
+        OutputHelper.output = output;
+    }
+
+    public static void resetOutput() {
+        OutputHelper.output.flush();
+        OutputHelper.output = System.out;
+    }
+
     public static void printTokens(List<? extends Token> allTokens) {
         for (Token token : allTokens) {
             if (token.getType() >= 1) {
                 String tokenText = getTokenText(token);
-                System.err.println(
+                output.println(
                         CmmLexer.ruleNames[token.getType() - 1] + " " + tokenText + " at Line "
                                 + token.getLine() + ".");
             }
@@ -40,7 +53,7 @@ public class OutputHelper {
     public static void printLexicalError(int line, String msg) {
         FlagHelper.hasLexicalError = true;
         if (FlagHelper.currentLine < line) {
-            System.err.println("Error type A at Line " + line + ": " + msg);
+            output.println("Error type A at Line " + line + ": " + msg);
             FlagHelper.currentLine = line;
         }
     }
@@ -48,21 +61,37 @@ public class OutputHelper {
     public static void printSyntaxError(int line, String msg) {
         FlagHelper.hasSyntaxError = true;
         if (FlagHelper.currentLine < line) {
-            System.err.println("Error type B at Line " + line + ": " + msg);
+            output.println("Error type B at Line " + line + ": " + msg);
             FlagHelper.currentLine = line;
         }
     }
 
     public static void printSemanticError(ErrorType errorType, int lineNo) {
         FlagHelper.hasSemanticError = true;
-        System.err.println("Error type " + errorType.getErrorNo() + " at Line " + lineNo
+        output.println("Error type " + errorType.getErrorNo() + " at Line " + lineNo
                 + ": " + errorType.getErrorMsg());
     }
 
     public static void printSemanticError(ErrorType errorType, int lineNo, String errorName) {
         FlagHelper.hasSemanticError = true;
-        System.err.println("Error type " + errorType.getErrorNo() + " at Line " + lineNo
+        output.println("Error type " + errorType.getErrorNo() + " at Line " + lineNo
                 + ": " + String.format(errorType.getErrorMsg(), errorName));
+    }
+
+
+    public static void print(String str) {
+        output.print(str);
+    }
+
+    public static void println(String str) {
+        output.println(str);
+    }
+
+    public static void printInterCode(InterCode interCode) {
+        while (interCode != null) {
+            output.println(interCode.codeKind.getInterCodeStringifyMethod().apply(interCode));
+            interCode = interCode.next;
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package L4;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -24,6 +25,8 @@ public class Main {
         }
         CharStream input = CharStreams.fromStream(is);
 
+        // Set default output file as err
+        OutputHelper.setOutput(System.err);
 
         // BEGIN LEXICAL PART
         CmmLexer lexer = new CmmLexer(input);
@@ -35,7 +38,6 @@ public class Main {
         } else {
             return;
         }
-
 
         // BEGIN SYNTAX PART
         lexer.reset();
@@ -52,13 +54,21 @@ public class Main {
             return;
         }
 
-
         // BEGIN SEMANTIC PART
         CmmSemanticAnalyzer cmmSemanticAnalyzer = new CmmSemanticAnalyzer();
         cmmSemanticAnalyzer.visit(tree);
 
-
         // BEGIN IR PART
-
+        if (!FlagHelper.hasSemanticError) {
+            if (args.length > 1) {
+                OutputHelper.setOutput(new PrintStream(args[1]));
+            }
+            else {
+                OutputHelper.setOutput(new PrintStream("output.ir"));
+            }
+            CmmInterCodeGenerator cmmInterCodeGenerator = new CmmInterCodeGenerator();
+            InterCode interCodeHead = cmmInterCodeGenerator.visit(tree);
+            OutputHelper.printInterCode(interCodeHead);
+        }
     }
 }
