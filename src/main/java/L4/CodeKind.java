@@ -1,14 +1,10 @@
 package L4;
 
-import L4.InterCode.AssignCode;
-import L4.InterCode.BinOpCode;
-import L4.InterCode.ConditionJumpCode;
-import L4.InterCode.MemDecCode;
 import java.util.function.Function;
 
 /**
  * @author cynyard
- * @description
+ * @description 枚举了InterCode的类型，将不同类型InterCode打印方法和类型绑定在一起，后期可以考虑一个更好的方法去耦合
  * @date 1/1/22
  */
 public enum CodeKind {
@@ -20,47 +16,47 @@ public enum CodeKind {
             "FUNCTION: " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),
     // x := y
     ASSIGN((InterCode interCode) ->
-            ((AssignCode) interCode).leftOperand.toString() + " := "
-                    + ((AssignCode) interCode).rightOperand.toString()),
+            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := "
+                    + ((InterCode.AssignCode) interCode).rightOperand.toString()),
 
     // x := y + z
     ADD((InterCode interCode) ->
-            ((BinOpCode) interCode).result.toString() + " := "
-                    + ((BinOpCode) interCode).operand1.toString() + " + "
-                    + ((BinOpCode) interCode).operand2.toString()),
+            ((InterCode.BinOpCode) interCode).result.toString() + " := "
+                    + ((InterCode.BinOpCode) interCode).operand1.toString() + " + "
+                    + ((InterCode.BinOpCode) interCode).operand2.toString()),
 
     // x := y - z
     SUB((InterCode interCode) ->
-            ((BinOpCode) interCode).result.toString() + " := "
-                    + ((BinOpCode) interCode).operand1.toString() + " - "
-                    + ((BinOpCode) interCode).operand2.toString()),
+            ((InterCode.BinOpCode) interCode).result.toString() + " := "
+                    + ((InterCode.BinOpCode) interCode).operand1.toString() + " - "
+                    + ((InterCode.BinOpCode) interCode).operand2.toString()),
 
     // x := y * z
     MUL((InterCode interCode) ->
-            ((BinOpCode) interCode).result.toString() + " := "
-                    + ((BinOpCode) interCode).operand1.toString() + " * "
-                    + ((BinOpCode) interCode).operand2.toString()),
+            ((InterCode.BinOpCode) interCode).result.toString() + " := "
+                    + ((InterCode.BinOpCode) interCode).operand1.toString() + " * "
+                    + ((InterCode.BinOpCode) interCode).operand2.toString()),
 
     // x := y / z
     DIV((InterCode interCode) ->
-            ((BinOpCode) interCode).result.toString() + " := "
-                    + ((BinOpCode) interCode).operand1.toString() + " / "
-                    + ((BinOpCode) interCode).operand2.toString()),
+            ((InterCode.BinOpCode) interCode).result.toString() + " := "
+                    + ((InterCode.BinOpCode) interCode).operand1.toString() + " / "
+                    + ((InterCode.BinOpCode) interCode).operand2.toString()),
 
     // x := &y
     GET_ADDR((InterCode interCode) ->
-            ((AssignCode) interCode).leftOperand.toString() + " := & "
-                    + ((AssignCode) interCode).rightOperand.toString()),
+            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := & "
+                    + ((InterCode.AssignCode) interCode).rightOperand.toString()),
 
     // x := *y
     READ_ADDR((InterCode interCode) ->
-            ((AssignCode) interCode).leftOperand.toString() + " := * "
-                    + ((AssignCode) interCode).rightOperand.toString()),
+            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := * "
+                    + ((InterCode.AssignCode) interCode).rightOperand.toString()),
 
     // *x = y
     WRITE_ADDR((InterCode interCode) ->
-            "*" + ((AssignCode) interCode).leftOperand.toString() + " := "
-                    + ((AssignCode) interCode).rightOperand.toString()),
+            "*" + ((InterCode.AssignCode) interCode).leftOperand.toString() + " := "
+                    + ((InterCode.AssignCode) interCode).rightOperand.toString()),
 
     // GOTO x
     GOTO((InterCode interCode) ->
@@ -68,10 +64,10 @@ public enum CodeKind {
 
     // IF x [relop] y GOTO z
     IF_GOTO((InterCode interCode) ->
-            "IF " + ((ConditionJumpCode) interCode).x.toString() + " "
-                    + ((ConditionJumpCode) interCode).relop + " "
-                    + ((ConditionJumpCode) interCode).y.toString() + " GOTO "
-                    + ((ConditionJumpCode) interCode).z.toString()),
+            "IF " + ((InterCode.ConditionJumpCode) interCode).op1.toString() + " "
+                    + ((InterCode.ConditionJumpCode) interCode).relop + " "
+                    + ((InterCode.ConditionJumpCode) interCode).op2.toString() + " GOTO "
+                    + ((InterCode.ConditionJumpCode) interCode).label.toString()),
 
     // RETURN x
     RETURN_((InterCode interCode) ->
@@ -80,7 +76,7 @@ public enum CodeKind {
     // DEC x [size]
     DEC((InterCode interCode) ->
             "DEC " + ((InterCode.MemDecCode) interCode).operand.toString()
-                    + " " + ((MemDecCode) interCode).size),
+                    + " " + ((InterCode.MemDecCode) interCode).size),
 
     // ARG x
     ARG((InterCode interCode) ->
@@ -88,8 +84,8 @@ public enum CodeKind {
 
     // x := CALL f
     CALL((InterCode interCode) ->
-            ((AssignCode) interCode).leftOperand.toString() + " := CALL "
-                    + ((AssignCode) interCode).rightOperand.toString()),
+            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := CALL "
+                    + ((InterCode.AssignCode) interCode).rightOperand.toString()),
 
     // PARAM x
     PARAM((InterCode interCode) ->

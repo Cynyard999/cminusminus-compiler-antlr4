@@ -36,8 +36,8 @@ public class CheckHelper {
 
     public static boolean isStructureEqual(Structure first, Structure second) {
         // 个数相同，并且类型的顺序也需要相同
-        FieldList firstMember = first.getMemberList();
-        FieldList secondMember = second.getMemberList();
+        Field firstMember = first.getMemberListHead();
+        Field secondMember = second.getMemberListHead();
         while (firstMember != null && secondMember != null) {
             if (!isTypeEqual(firstMember.getType(), secondMember.getType())){
                 return false;
@@ -48,7 +48,7 @@ public class CheckHelper {
         return firstMember == null && secondMember == null;
     }
 
-    public static boolean isFieldListEqual(FieldList first, FieldList second) {
+    public static boolean isFieldListEqual(Field first, Field second) {
         while (first != null && second != null && isTypeEqual(first.getType(), second.getType())) {
             first = first.getNext();
             second = second.getNext();

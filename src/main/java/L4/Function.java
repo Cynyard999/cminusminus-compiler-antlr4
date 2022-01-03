@@ -8,7 +8,7 @@ package L4;
 public class Function extends Type {
 
     private Type returnType;
-    private FieldList paramList;
+    private Field paramListHead;
 
     public Function() {
         setSymbolKind(SymbolKind.FUNCTION);
@@ -22,11 +22,11 @@ public class Function extends Type {
         this.returnType = returnType;
     }
 
-    public FieldList getParamList() {
-        return paramList;
+    public Field getParamListHead() {
+        return paramListHead;
     }
 
-    public void setParamList(FieldList paramList) {
-        this.paramList = paramList;
+    public void setParamListHead(Field paramListHead) {
+        this.paramListHead = paramListHead;
     }
 }

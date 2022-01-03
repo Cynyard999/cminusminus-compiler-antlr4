@@ -8,7 +8,7 @@ package L4;
 public class Structure extends Type {
 
     private String name;
-    private FieldList memberList;
+    private Field memberListHead;
 
     public Structure() {
         this.setSymbolKind(SymbolKind.STRUCTURE);
@@ -22,11 +22,11 @@ public class Structure extends Type {
         this.name = name;
     }
 
-    public FieldList getMemberList() {
-        return memberList;
+    public Field getMemberListHead() {
+        return memberListHead;
     }
 
-    public void setMemberList(FieldList memberList) {
-        this.memberList = memberList;
+    public void setMemberListHead(Field memberListHead) {
+        this.memberListHead = memberListHead;
     }
 }

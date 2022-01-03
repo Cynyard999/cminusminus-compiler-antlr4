@@ -18,15 +18,16 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class Main {
 
     public static void main(String[] args) throws Exception {
+        // Set default output file as err
+        OutputHelper.setOutput(System.err);
+
+        // Get input Cmm language
         InputStream is = System.in;
         if (args.length > 0) {
             String inputFile = args[0];
             is = new FileInputStream(inputFile);
         }
         CharStream input = CharStreams.fromStream(is);
-
-        // Set default output file as err
-        OutputHelper.setOutput(System.err);
 
         // BEGIN LEXICAL PART
         CmmLexer lexer = new CmmLexer(input);

@@ -2,17 +2,19 @@ package L4;
 
 /**
  * @author cynyard
- * @description
+ * @description 仅仅使用链表节点来表示整个链表数据结构，添加了tail指针方便添加
+ * 但使用有很多限制
+ * 例如一个链表中的每个节点的tail可能都不同，但保证头节点的tail一定是当前链表的tail
  * @date 12/1/21
  */
-public class FieldList implements Returnable {
+public class Field implements Returnable {
 
     private String name;
     private Type type;
-    private FieldList next;
-    private FieldList tail;
+    private Field next;
+    private Field tail;
 
-    public FieldList() {
+    public Field() {
         // CRUCIAL!!
         this.tail = this;
     }
@@ -33,23 +35,23 @@ public class FieldList implements Returnable {
         this.type = type;
     }
 
-    public FieldList getNext() {
+    public Field getNext() {
         return next;
     }
 
-    public void setNext(FieldList next) {
+    public void setNext(Field next) {
         this.next = next;
     }
 
-    public FieldList getTail() {
+    public Field getTail() {
         return tail;
     }
 
-    public void setTail(FieldList tail) {
+    public void setTail(Field tail) {
         this.tail = tail;
     }
 
-    public void addField(FieldList newField) {
+    public void addField(Field newField) {
         if (newField == null) {
             return;
         }
