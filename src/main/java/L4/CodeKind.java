@@ -10,10 +10,10 @@ import java.util.function.Function;
 public enum CodeKind {
     // LABEL x :
     LABEL((InterCode interCode) ->
-            "Label: " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),
+            "Label " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),
     // FUNCTION f :
     FUNCTION((InterCode interCode) ->
-            "FUNCTION: " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),
+            "FUNCTION " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),
     // x := y
     ASSIGN((InterCode interCode) ->
             ((InterCode.AssignCode) interCode).leftOperand.toString() + " := "
@@ -45,12 +45,12 @@ public enum CodeKind {
 
     // x := &y
     GET_ADDR((InterCode interCode) ->
-            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := & "
+            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := &"
                     + ((InterCode.AssignCode) interCode).rightOperand.toString()),
 
     // x := *y
     READ_ADDR((InterCode interCode) ->
-            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := * "
+            ((InterCode.AssignCode) interCode).leftOperand.toString() + " := *"
                     + ((InterCode.AssignCode) interCode).rightOperand.toString()),
 
     // *x = y
@@ -60,7 +60,7 @@ public enum CodeKind {
 
     // GOTO x
     GOTO((InterCode interCode) ->
-            "GOTO: " + ((InterCode.MonoOpCode) interCode).operand.toString()),
+            "GOTO " + ((InterCode.MonoOpCode) interCode).operand.toString()),
 
     // IF x [relop] y GOTO z
     IF_GOTO((InterCode interCode) ->

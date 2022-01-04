@@ -55,7 +55,15 @@ public class Main {
             return;
         }
 
-        // BEGIN SEMANTIC PART
+        // BEGIN SEMANTIC PART and build symbol table
+        Function readFunction = new Function();
+        readFunction.setReturnType(new Basic("int"));
+        HashTable.getHashTable().addNode(readFunction, "read");
+        Function writeFunction = new Function();
+        Field writeParam = new Field();
+        writeParam.setType(new Basic("int"));
+        writeFunction.setParamListHead(writeParam);
+        HashTable.getHashTable().addNode(writeFunction, "write");
         CmmSemanticAnalyzer cmmSemanticAnalyzer = new CmmSemanticAnalyzer();
         cmmSemanticAnalyzer.visit(tree);
 
@@ -63,9 +71,9 @@ public class Main {
         if (!FlagHelper.hasSemanticError) {
             if (args.length > 1) {
                 OutputHelper.setOutput(new PrintStream(args[1]));
-            }
-            else {
-                OutputHelper.setOutput(new PrintStream("output.ir"));
+            } else {
+//                OutputHelper.setOutput(new PrintStream("output.ir"));
+                OutputHelper.resetOutput();
             }
             CmmInterCodeGenerator cmmInterCodeGenerator = new CmmInterCodeGenerator();
             InterCode interCodeHead = cmmInterCodeGenerator.visit(tree);

@@ -31,3 +31,47 @@ return a.b.c;
 
 结构体数组有可能出现吗？
 结构体的嵌套域？
+
+
+
+struct Operands
+{
+int o1;
+int o2;
+};
+
+int add(struct Operands temp)
+{
+int n = read();
+temp.o1 = 1;
+return temp.o1+n;
+}
+
+int main(){
+struct Operands temp2;
+temp2.o1 = 1;
+return 0;
+}
+
+
+int main(){
+int a[10];
+a[2] = read();
+write(a[2]);
+return a[1];
+}
+
+
+
+struct Operands
+{
+int o1;
+int o2;
+};
+int main(){
+struct Operands o;
+o.o1 = 1;
+o.o2 = 2;
+write(o.o1);
+return 0;
+}
