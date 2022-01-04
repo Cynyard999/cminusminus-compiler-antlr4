@@ -21,7 +21,7 @@ public class Main {
         // Set default output file as err
         OutputHelper.setOutput(System.err);
 
-        // Get input Cmm language
+        // Get Cmm language input
         InputStream is = System.in;
         if (args.length > 0) {
             String inputFile = args[0];
@@ -29,6 +29,22 @@ public class Main {
         }
         CharStream input = CharStreams.fromStream(is);
 
+        CmmLexer cmmLexer = lexerStart(input);
+
+        ParseTree tree = parserStart(cmmLexer);
+
+        ParseTree checkedTree = semanticsStart(tree);
+
+        if (args.length > 1) {
+            intermediateRepresentationStart(checkedTree, new PrintStream(args[1]));
+        } else {
+            intermediateRepresentationStart(checkedTree, System.out);
+        }
+
+        OutputHelper.resetOutput();
+    }
+
+    private static CmmLexer lexerStart(CharStream input) {
         // BEGIN LEXICAL PART
         CmmLexer lexer = new CmmLexer(input);
         lexer.removeErrorListeners();
@@ -36,12 +52,18 @@ public class Main {
         List<? extends Token> allTokens = lexer.getAllTokens();
         if (!FlagHelper.hasLexicalError) {
 //            OutputHelper.printTokens(allTokens);
+            lexer.reset();
+            return lexer;
         } else {
-            return;
+            return null;
         }
+    }
 
+    private static ParseTree parserStart(CmmLexer lexer) {
+        if (lexer == null) {
+            return null;
+        }
         // BEGIN SYNTAX PART
-        lexer.reset();
         FlagHelper.currentLine = -1;
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CmmParser parser = new CmmParser(tokenStream);
@@ -51,11 +73,39 @@ public class Main {
         if (!FlagHelper.hasSyntaxError) {
 //            CmmVisitor cmmVisitor = new CmmVisitor();
 //            cmmVisitor.visit(tree);
+            return tree;
         } else {
+            return null;
+        }
+    }
+
+    private static ParseTree semanticsStart(ParseTree tree) {
+        if (tree == null) {
+            return null;
+        }
+        initSymbolTable();
+        // BEGIN SEMANTIC PART
+        CmmSemanticAnalyzer cmmSemanticAnalyzer = new CmmSemanticAnalyzer();
+        cmmSemanticAnalyzer.visit(tree);
+        if (!FlagHelper.hasSemanticError) {
+            return tree;
+        } else {
+            return null;
+        }
+    }
+
+    private static void intermediateRepresentationStart(ParseTree tree, PrintStream output) {
+        if (tree == null) {
             return;
         }
+        // BEGIN IR PART
+        OutputHelper.setOutput(output);
+        CmmInterCodeGenerator cmmInterCodeGenerator = new CmmInterCodeGenerator();
+        InterCode interCodeHead = cmmInterCodeGenerator.visit(tree);
+        OutputHelper.printInterCode(interCodeHead);
+    }
 
-        // BEGIN SEMANTIC PART and build symbol table
+    private static void initSymbolTable() {
         Function readFunction = new Function();
         readFunction.setReturnType(new Basic("int"));
         HashTable.getHashTable().addNode(readFunction, "read");
@@ -64,20 +114,7 @@ public class Main {
         writeParam.setType(new Basic("int"));
         writeFunction.setParamListHead(writeParam);
         HashTable.getHashTable().addNode(writeFunction, "write");
-        CmmSemanticAnalyzer cmmSemanticAnalyzer = new CmmSemanticAnalyzer();
-        cmmSemanticAnalyzer.visit(tree);
-
-        // BEGIN IR PART
-        if (!FlagHelper.hasSemanticError) {
-            if (args.length > 1) {
-                OutputHelper.setOutput(new PrintStream(args[1]));
-            } else {
-//                OutputHelper.setOutput(new PrintStream("output.ir"));
-                OutputHelper.resetOutput();
-            }
-            CmmInterCodeGenerator cmmInterCodeGenerator = new CmmInterCodeGenerator();
-            InterCode interCodeHead = cmmInterCodeGenerator.visit(tree);
-            OutputHelper.printInterCode(interCodeHead);
-        }
     }
+
+
 }

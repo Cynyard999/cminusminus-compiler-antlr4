@@ -1,8 +1,5 @@
 package L4;
 
-import L4.CmmParser.ExpBracketsContext;
-import L4.CmmParser.ExpRelopContext;
-import L4.InterCode.AssignCode;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
@@ -324,13 +321,13 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
 
         if (temp1.operandKind == OperandKind.ADDRESS) {
             Operand temp = makeNewTemp();
-            InterCode readAddrCode = new AssignCode(CodeKind.READ_ADDR, temp, temp1);
+            InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp, temp1);
             expCode1.addInterCode(readAddrCode);
             temp1 = temp;
         }
         if (temp2.operandKind == OperandKind.ADDRESS) {
             Operand temp = makeNewTemp();
-            InterCode readAddrCode = new AssignCode(CodeKind.READ_ADDR, temp, temp2);
+            InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp, temp2);
             expCode2.addInterCode(readAddrCode);
             temp2 = temp;
         }
@@ -438,7 +435,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
             if (target == null) {
                 target = makeNewTemp();
             }
-            return new AssignCode(CodeKind.CALL, target,
+            return new InterCode.AssignCode(CodeKind.CALL, target,
                     new Operand(OperandKind.FUNCTION, ctx.ID().getText()));
         }
     }
@@ -628,7 +625,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                 // sub(a.b); sub(a[0]) // a is struct or array
                 else {
                     Operand temp2 = makeNewTemp();
-                    InterCode readAddrCode = new AssignCode(CodeKind.READ_ADDR, temp2, temp);
+                    InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp2, temp);
                     InterCode.join(expCodeHead, readAddrCode);
                     argCode = new InterCode.MonoOpCode(CodeKind.ARG, temp2);
                 }
@@ -748,7 +745,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
             operandStack.pop();
 
             InterCode ifGoToInterCode = generateIfGoToInterCode(temp1, temp2,
-                    ((ExpRelopContext) ctx).RELOP().getText(), labelTrue, labelFalse);
+                    ((CmmParser.ExpRelopContext) ctx).RELOP().getText(), labelTrue, labelFalse);
 
             return InterCode.join(InterCode.join(expCode1, expCode2), ifGoToInterCode);
         } else {
@@ -794,7 +791,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
             return table.getType(((CmmParser.ExpDotContext) ctx).ID().getText());
         }
         if (ctx instanceof CmmParser.ExpBracketsContext) {
-            Type expType = getExpType(((ExpBracketsContext) ctx).exp(0));
+            Type expType = getExpType(((CmmParser.ExpBracketsContext) ctx).exp(0));
             if (expType.getSymbolKind() == SymbolKind.ARRAY) {
                 return getArrayBasicElementType(expType);
             }
