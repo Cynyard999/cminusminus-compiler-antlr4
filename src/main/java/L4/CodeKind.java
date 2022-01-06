@@ -10,7 +10,7 @@ import java.util.function.Function;
 public enum CodeKind {
     // LABEL x :
     LABEL((InterCode interCode) ->
-            "Label " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),
+            "LABEL " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),
     // FUNCTION f :
     FUNCTION((InterCode interCode) ->
             "FUNCTION " + ((InterCode.MonoOpCode) interCode).operand.toString() + " :"),

@@ -67,7 +67,10 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
         InterCode.MonoOpCode funcDefineCode = new InterCode.MonoOpCode(CodeKind.FUNCTION, op);
         Field curParam = ((Function) table.getType(op.value)).getParamListHead();
         while (curParam != null) {
-            paramStructSet.add(curParam.getName());
+            if (curParam.getType().getSymbolKind() == SymbolKind.STRUCTURE) {
+                // in function body, this param is used as address
+                paramStructSet.add(curParam.getName());
+            }
             Operand paramOp = new Operand(OperandKind.VARIABLE, curParam.getName());
             InterCode paramCode = new InterCode.MonoOpCode(CodeKind.PARAM, paramOp);
             funcDefineCode.addInterCode(paramCode);
@@ -322,13 +325,13 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
         if (temp1.operandKind == OperandKind.ADDRESS) {
             Operand temp = makeNewTemp();
             InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp, temp1);
-            expCode1.addInterCode(readAddrCode);
+            expCode1 = InterCode.join(expCode1, readAddrCode);
             temp1 = temp;
         }
         if (temp2.operandKind == OperandKind.ADDRESS) {
             Operand temp = makeNewTemp();
             InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp, temp2);
-            expCode2.addInterCode(readAddrCode);
+            expCode2 = InterCode.join(expCode2, readAddrCode);
             temp2 = temp;
         }
 
@@ -625,7 +628,8 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                 // sub(a.b); sub(a[0]) // a is struct or array
                 else {
                     Operand temp2 = makeNewTemp();
-                    InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp2, temp);
+                    InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp2,
+                            temp);
                     InterCode.join(expCodeHead, readAddrCode);
                     argCode = new InterCode.MonoOpCode(CodeKind.ARG, temp2);
                 }
@@ -764,11 +768,11 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
     }
 
     private Operand makeNewTemp() {
-        return new Operand(OperandKind.VARIABLE, "temp" + FlagHelper.tempVariableCount++);
+        return new Operand(OperandKind.VARIABLE, "t" + FlagHelper.tempVariableCount++);
     }
 
     private Operand makeNewTemp(OperandKind kind) {
-        return new Operand(kind, "temp" + FlagHelper.tempVariableCount++);
+        return new Operand(kind, "t" + FlagHelper.tempVariableCount++);
     }
 
     private Operand makeNewConstant(String value) {
