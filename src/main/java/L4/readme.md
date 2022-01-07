@@ -1,3 +1,8 @@
+没有使用全局变量 但是用不用问题都不大
+
+需要处理连等号
+
+
 
 对结构体内成员 以及数组元素的访问 肯定有一个target
 如果类似如下的代码：
@@ -34,23 +39,23 @@ return a.b.c;
 
 
 
-struct Operands
+struct Score
 {
-int o1;
-int o2;
+int normalPart;
+int hardPart;
 };
 
-int add(struct Operands temp)
+int getScore(struct Score score)
 {
-int n = read();
-temp.o1 = 1;
-return temp.o1+n;
+return score.normalPart+score.hardPart;
 }
 
 int main(){
-struct Operands temp2;
-temp2.o1 = 1;
-return 0;
+struct Score s;
+s.normalPart = read();
+s.hardPart = read();
+write(getScore(s));
+return getScore(s);
 }
 
 
@@ -70,8 +75,43 @@ int o2;
 };
 int main(){
 struct Operands o;
-o.o1 = 1;
+o.o1 = read();
 o.o2 = 2;
 write(o.o1);
+write(o.o2);
+return 0;
+}
+
+
+int main(){
+int n = read();
+while(n<10){
+    n = read();
+}
+return n;
+}
+
+
+struct Operands
+{
+int o1;
+int o2;
+};
+
+
+
+struct Operands
+{
+int o1;
+int o2;
+};
+int main(){
+struct Operands o[2];
+o[0].o1 = 1;
+o[0].o2 = 2;
+o[1].o1 = 3;
+o[1].o2 = 4;
+write(o[0].o1);
+write(o[1].o2);
 return 0;
 }
