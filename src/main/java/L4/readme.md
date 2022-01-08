@@ -115,3 +115,7 @@ write(o[0].o1);
 write(o[1].o2);
 return 0;
 }
+
+
+normal1 主要是relop两边的exp如果都是地址？
+到处都需要考虑exp返回的是地址,vardec那里也是
