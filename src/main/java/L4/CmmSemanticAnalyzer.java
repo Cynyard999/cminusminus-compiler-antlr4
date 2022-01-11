@@ -340,12 +340,12 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             } else if (varDec != null && !CheckHelper.isTypeEqual(varDec.getType(), exp)) {
                 OutputHelper.printSemanticError(ErrorType.MISMATCH_ASSIGN,
                         ctx.exp().getStart().getLine());
-                return defaultResult();
+                // return defaultResult(); // 定义时类型错误可以加入符号表也可以不加入
             }
         } else {
             varDec = (Field) visit(ctx.varDec());
         }
-        // add to symbol table until
+        // add to symbol table
         if (varDec != null) {
             table.addNode(varDec.getType(), varDec.getName());
         }
