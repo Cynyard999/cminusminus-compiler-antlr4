@@ -403,8 +403,8 @@ public class CmmSemanticAnalyzer extends CmmParserBaseVisitor<Returnable> {
             return defaultResult();
         }
         if (index.getSymbolKind() != SymbolKind.INT) {
-            OutputHelper.printSemanticError(ErrorType.NON_INT, ctx.exp(0).getStart().getLine(),
-                    ctx.exp(0).getText());
+            OutputHelper.printSemanticError(ErrorType.NON_INT, ctx.exp(1).getStart().getLine(),
+                    ctx.exp(1).getText());
             return defaultResult();
         }
         return ((Array) array).getElements();
