@@ -20,31 +20,26 @@ public class CmmVisitor extends CmmParserBaseVisitor<Void> {
     }
 
     private void printTerminal(int depth, String name) {
-        System.err.println(
-                String.format("%s%s", getIndent(depth), name));
+        OutputHelper.println(String.format("%s%s", getIndent(depth), name));
     }
 
     private void printTerminal(int depth, String name, String value) {
-        System.err.println(
-                String.format("%s%s: %s", getIndent(depth), name,
-                        value));
+        OutputHelper.println(String.format("%s%s: %s", getIndent(depth), name,
+                value));
     }
 
     private void printTerminal(int depth, String name, int value) {
-        System.err.println(
-                String.format("%s%s: %d", getIndent(depth), name,
-                        value));
+        OutputHelper.println(String.format("%s%s: %d", getIndent(depth), name,
+                value));
     }
 
     private void printTerminal(int depth, String name, double value) {
-        System.err.println(
-                String.format("%s%s: %.6f", getIndent(depth), name,
-                        value));
+        OutputHelper.println(String.format("%s%s: %.6f", getIndent(depth), name,
+                value));
     }
 
     private void printRule(int depth, int line, String name) {
-        System.err.println(
-                String.format("%s%s (%d)", getIndent(depth), name, line));
+        OutputHelper.println(String.format("%s%s (%d)", getIndent(depth), name, line));
     }
 
     @Override

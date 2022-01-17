@@ -35,10 +35,12 @@ public class Main {
 
         ParseTree checkedTree = semanticsStart(tree);
 
+        InterCode interCodeHead = intermediateRepresentationStart(checkedTree);
+
         if (args.length > 1) {
-            intermediateRepresentationStart(checkedTree, new PrintStream(args[1]));
+            assemblyCodeStart(interCodeHead, new PrintStream(args[1]));
         } else {
-            intermediateRepresentationStart(checkedTree, System.out);
+            assemblyCodeStart(interCodeHead, System.out);
         }
 
         OutputHelper.resetOutput();
@@ -94,15 +96,30 @@ public class Main {
         }
     }
 
-    private static void intermediateRepresentationStart(ParseTree tree, PrintStream output) {
+    private static InterCode intermediateRepresentationStart(ParseTree tree) {
         if (tree == null) {
-            return;
+            return null;
         }
         // BEGIN IR PART
-        OutputHelper.setOutput(output);
         CmmInterCodeGenerator cmmInterCodeGenerator = new CmmInterCodeGenerator();
-        InterCode interCodeHead = cmmInterCodeGenerator.visit(tree);
-        OutputHelper.printInterCode(interCodeHead);
+        return cmmInterCodeGenerator.visit(tree);
+//        InterCode interCodeHead = cmmInterCodeGenerator.visit(tree);
+//        InterCode currentInterCode = interCodeHead;
+//        while (currentInterCode != null) {
+//            OutputHelper.println(currentInterCode.toString());
+//            currentInterCode = currentInterCode.next;
+//        }
+//        return interCodeHead;
+    }
+
+    private static void assemblyCodeStart(InterCode interCodeHead, PrintStream output) {
+        if (interCodeHead == null) {
+            return;
+        }
+        // BEGIN ASSEMBLY PART
+        OutputHelper.setOutput(output);
+        AssemblyCodeGenerator assemblyCodeGenerator = new AssemblyCodeGenerator(interCodeHead);
+        assemblyCodeGenerator.start();
     }
 
     private static void initSymbolTable() {

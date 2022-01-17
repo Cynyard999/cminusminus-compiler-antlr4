@@ -128,4 +128,9 @@ public abstract class InterCode {
         this.tail.next = newCode;
         this.tail = newCode.tail;
     }
+
+    @Override
+    public String toString() {
+        return this.codeKind.getInterCodeStringifyMethod().apply(this);
+    }
 }

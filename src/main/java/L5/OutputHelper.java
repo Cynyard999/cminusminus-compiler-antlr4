@@ -83,15 +83,32 @@ public class OutputHelper {
         output.print(str);
     }
 
+    public static void println() {
+        output.println();
+    }
+
     public static void println(String str) {
+        output.println(str);
+    }
+
+    public static void println(String str, int indentSize) {
+        output.println(getIndent(indentSize));
         output.println(str);
     }
 
     public static void printInterCode(InterCode interCode) {
         while (interCode != null) {
-            output.println(interCode.codeKind.getInterCodeStringifyMethod().apply(interCode));
+            output.println(interCode.toString());
             interCode = interCode.next;
         }
+    }
+
+    private static String getIndent(int length) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < length - 1; i++) {
+            stringBuilder.append("  ");
+        }
+        return stringBuilder.toString();
     }
 
 }
