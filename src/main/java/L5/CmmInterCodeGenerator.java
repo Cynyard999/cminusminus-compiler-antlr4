@@ -10,7 +10,7 @@ import java.util.List;
  * @description
  * @date 1/1/22
  */
-public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
+public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCodeList> {
 
     HashTable table = HashTable.getHashTable();
     Deque<Operand> operandStack = new ArrayDeque<>();
@@ -19,31 +19,31 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
     HashSet<String> paramStructSet = new HashSet<>();
 
     @Override
-    public InterCode visitProgram(CmmParser.ProgramContext ctx) {
-        InterCode interCodeHead = null;
+    public InterCodeList visitProgram(CmmParser.ProgramContext ctx) {
+        InterCodeList interCodeList = null;
         List<CmmParser.ExtDefContext> extDefList = ctx.extDef();
         for (CmmParser.ExtDefContext extDefContext : extDefList) {
-            InterCode nextInterCode = visit(extDefContext);
-            if (interCodeHead == null) {
-                interCodeHead = nextInterCode;
+            InterCodeList nextInterCodeList = visit(extDefContext);
+            if (interCodeList == null) {
+                interCodeList = nextInterCodeList;
                 continue;
             }
-            interCodeHead.addInterCode(nextInterCode);
+            interCodeList.addInterCodeList(nextInterCodeList);
         }
-        return interCodeHead;
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitExtDef(CmmParser.ExtDefContext ctx) {
+    public InterCodeList visitExtDef(CmmParser.ExtDefContext ctx) {
         // exclude global variables and type define
         if (ctx.SEMI() != null) {
             return defaultResult();
         }
-        return InterCode.join(visit(ctx.funDec()), visit(ctx.compSt()));
+        return InterCodeList.join(visit(ctx.funDec()), visit(ctx.compSt()));
     }
 
     @Override
-    public InterCode visitVarDec(CmmParser.VarDecContext ctx) {
+    public InterCodeList visitVarDec(CmmParser.VarDecContext ctx) {
         Operand target = operandStack.peek();
         String idText = ctx.ID(0).getText();
         Type idType = table.getType(idText);
@@ -56,203 +56,232 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
             return defaultResult();
         } else {
             Operand operand = makeNewVariable(idText);
-            return new InterCode.MemDecCode(CodeKind.DEC, operand,
-                    getTypeSize(table.getType(operand.value)));
+            return new InterCodeList(new InterCode.MemDecCode(CodeKind.DEC, operand,
+                    getTypeSize(table.getType(operand.value))));
         }
     }
 
     @Override
-    public InterCode visitFunDec(CmmParser.FunDecContext ctx) {
+    public InterCodeList visitFunDec(CmmParser.FunDecContext ctx) {
         Operand op = new Operand(OperandKind.FUNCTION, ctx.ID().getText());
         InterCode.MonoOpCode funcDefineCode = new InterCode.MonoOpCode(CodeKind.FUNCTION, op);
+        InterCodeList interCodeList = new InterCodeList(funcDefineCode);
         Field curParam = ((Function) table.getType(op.value)).getParamListHead();
         while (curParam != null) {
             if (curParam.getType().getSymbolKind() == SymbolKind.STRUCTURE) {
-                // in function body, this param is used as address
+                // in function body, this param is used as address. record such param temporarily
                 paramStructSet.add(curParam.getName());
             }
             Operand paramOp = new Operand(OperandKind.VARIABLE, curParam.getName());
             InterCode paramCode = new InterCode.MonoOpCode(CodeKind.PARAM, paramOp);
-            funcDefineCode.addInterCode(paramCode);
+            interCodeList.addInterCode(paramCode);
             curParam = curParam.getNext();
         }
-        return funcDefineCode;
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitCompSt(CmmParser.CompStContext ctx) {
-        return InterCode.join(visit(ctx.defList()), visit(ctx.stmtList()));
+    public InterCodeList visitCompSt(CmmParser.CompStContext ctx) {
+        return InterCodeList.join(visit(ctx.defList()), visit(ctx.stmtList()));
     }
 
     @Override
-    public InterCode visitStmtList(CmmParser.StmtListContext ctx) {
-        InterCode interCodeHead = null;
+    public InterCodeList visitStmtList(CmmParser.StmtListContext ctx) {
+        InterCodeList interCodeList = null;
         List<CmmParser.StmtContext> stmtList = ctx.stmt();
         for (CmmParser.StmtContext stmtContext : stmtList) {
-            InterCode nextInterCode = visit(stmtContext);
-            if (interCodeHead == null) {
-                interCodeHead = nextInterCode;
+            InterCodeList nextInterCodeList = visit(stmtContext);
+            if (interCodeList == null) {
+                interCodeList = nextInterCodeList;
                 continue;
             }
-            interCodeHead.addInterCode(nextInterCode);
+            interCodeList.addInterCodeList(nextInterCodeList);
         }
-        return interCodeHead;
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitStmtExp(CmmParser.StmtExpContext ctx) {
+    public InterCodeList visitStmtExp(CmmParser.StmtExpContext ctx) {
         return visit(ctx.exp());
     }
 
     @Override
-    public InterCode visitStmtCompSt(CmmParser.StmtCompStContext ctx) {
+    public InterCodeList visitStmtCompSt(CmmParser.StmtCompStContext ctx) {
         return visit(ctx.compSt());
     }
 
     @Override
-    public InterCode visitStmtReturn(CmmParser.StmtReturnContext ctx) {
+    public InterCodeList visitStmtReturn(CmmParser.StmtReturnContext ctx) {
+        InterCodeList interCodeList = new InterCodeList();
         Operand temp = makeNewTemp();
         operandStack.push(temp);
-        InterCode expCode = visit(ctx.exp());
+        InterCodeList expCode = visit(ctx.exp());
         operandStack.pop();
+        interCodeList.addInterCodeList(expCode);
         if (temp.operandKind == OperandKind.ADDRESS) {
             Operand temp2 = makeNewTemp();
             InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp2, temp);
             InterCode returnCode = new InterCode.MonoOpCode(CodeKind.RETURN_, temp2);
-            return InterCode.join(InterCode.join(expCode, readAddrCode), returnCode);
+            interCodeList.addInterCode(readAddrCode);
+            interCodeList.addInterCode(returnCode);
         } else {
             InterCode returnCode = new InterCode.MonoOpCode(CodeKind.RETURN_, temp);
-            return InterCode.join(expCode, returnCode);
+            interCodeList.addInterCode(returnCode);
         }
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitStmtIf(CmmParser.StmtIfContext ctx) {
+    public InterCodeList visitStmtIf(CmmParser.StmtIfContext ctx) {
+        InterCodeList interCodeList = new InterCodeList();
         Operand label1 = makeNewLabel();
         Operand label2 = makeNewLabel();
-        InterCode ifConditionCode = generateConditionInterCode(ctx.exp(), label1, label2);
+        InterCodeList ifConditionCode = generateConditionInterCode(ctx.exp(), label1, label2);
+        interCodeList.addInterCodeList(ifConditionCode);
+
         InterCode label1Code = new InterCode.MonoOpCode(CodeKind.LABEL, label1);
-        InterCode stmtCode = visit(ctx.stmt());
+        interCodeList.addInterCode(label1Code);
+
+        InterCodeList stmtCode = visit(ctx.stmt());
+        interCodeList.addInterCodeList(stmtCode);
+
         InterCode label2Code = new InterCode.MonoOpCode(CodeKind.LABEL, label2);
-        return InterCode.join(
-                InterCode.join(
-                        InterCode.join(ifConditionCode, label1Code),
-                        stmtCode),
-                label2Code);
+        interCodeList.addInterCode(label2Code);
+
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitStmtIfElse(CmmParser.StmtIfElseContext ctx) {
+    public InterCodeList visitStmtIfElse(CmmParser.StmtIfElseContext ctx) {
+        InterCodeList interCodeList = new InterCodeList();
         Operand label1 = makeNewLabel();
         Operand label2 = makeNewLabel();
         Operand label3 = makeNewLabel();
-        InterCode ifConditionCode = generateConditionInterCode(ctx.exp(), label1, label2);
+
+        InterCodeList ifConditionCode = generateConditionInterCode(ctx.exp(), label1, label2);
+        interCodeList.addInterCodeList(ifConditionCode);
+
         InterCode label1Code = new InterCode.MonoOpCode(CodeKind.LABEL, label1);
-        InterCode stmt1Code = visit(ctx.stmt(0));
+        interCodeList.addInterCode(label1Code);
+
+        InterCodeList stmt1Code = visit(ctx.stmt(0));
+        interCodeList.addInterCodeList(stmt1Code);
+
         InterCode gotoCode = new InterCode.MonoOpCode(CodeKind.GOTO, label3);
+        interCodeList.addInterCode(gotoCode);
+
         InterCode label2Code = new InterCode.MonoOpCode(CodeKind.LABEL, label2);
-        InterCode stmt2Code = visit(ctx.stmt(1));
+        interCodeList.addInterCode(label2Code);
+
+        InterCodeList stmt2Code = visit(ctx.stmt(1));
+        interCodeList.addInterCodeList(stmt2Code);
+
         InterCode label3Code = new InterCode.MonoOpCode(CodeKind.LABEL, label3);
-        return InterCode.join(
-                InterCode.join(
-                        InterCode.join(
-                                InterCode.join(
-                                        InterCode.join(
-                                                InterCode.join(
-                                                        ifConditionCode, label1Code),
-                                                stmt1Code),
-                                        gotoCode),
-                                label2Code),
-                        stmt2Code),
-                label3Code);
+        interCodeList.addInterCode(label3Code);
+
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitStmtWhile(CmmParser.StmtWhileContext ctx) {
+    public InterCodeList visitStmtWhile(CmmParser.StmtWhileContext ctx) {
+        InterCodeList interCodeList = new InterCodeList();
+
         Operand label1 = makeNewLabel();
         Operand label2 = makeNewLabel();
         Operand label3 = makeNewLabel();
         InterCode label1Code = new InterCode.MonoOpCode(CodeKind.LABEL, label1);
-        InterCode expCode = generateConditionInterCode(ctx.exp(), label2, label3);
+        interCodeList.addInterCode(label1Code);
+
+        InterCodeList expCode = generateConditionInterCode(ctx.exp(), label2, label3);
+        interCodeList.addInterCodeList(expCode);
+
         InterCode label2Code = new InterCode.MonoOpCode(CodeKind.LABEL, label2);
-        InterCode stmtCode = visit(ctx.stmt());
+        interCodeList.addInterCode(label2Code);
+
+        InterCodeList stmtCode = visit(ctx.stmt());
+        interCodeList.addInterCodeList(stmtCode);
+
         InterCode gotoLabel1Code = new InterCode.MonoOpCode(CodeKind.GOTO, label1);
+        interCodeList.addInterCode(gotoLabel1Code);
+
         InterCode label3Code = new InterCode.MonoOpCode(CodeKind.LABEL, label3);
-        return InterCode.join(
-                InterCode.join(
-                        InterCode.join(
-                                InterCode.join(
-                                        InterCode.join(label1Code, expCode),
-                                        label2Code),
-                                stmtCode),
-                        gotoLabel1Code),
-                label3Code);
+        interCodeList.addInterCode(label3Code);
+
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitDefList(CmmParser.DefListContext ctx) {
-        InterCode interCodeHead = null;
+    public InterCodeList visitDefList(CmmParser.DefListContext ctx) {
+        InterCodeList interCodeList = null;
         List<CmmParser.DefContext> defList = ctx.def();
         for (CmmParser.DefContext defContext : defList) {
-            InterCode nextInterCode = visit(defContext);
-            if (interCodeHead == null) {
-                interCodeHead = nextInterCode;
+            InterCodeList nextInterCodeList = visit(defContext);
+            if (interCodeList == null) {
+                interCodeList = nextInterCodeList;
                 continue;
             }
-            interCodeHead.addInterCode(nextInterCode);
+            interCodeList.addInterCodeList(nextInterCodeList);
         }
-        return interCodeHead;
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitDef(CmmParser.DefContext ctx) {
+    public InterCodeList visitDef(CmmParser.DefContext ctx) {
         return visit(ctx.decList());
     }
 
     @Override
-    public InterCode visitDecList(CmmParser.DecListContext ctx) {
-        InterCode interCodeHead = null;
+    public InterCodeList visitDecList(CmmParser.DecListContext ctx) {
+        InterCodeList interCodeList = null;
         List<CmmParser.DecContext> decList = ctx.dec();
         for (CmmParser.DecContext decContext : decList) {
-            InterCode nextInterCode = visit(decContext);
-            if (interCodeHead == null) {
-                interCodeHead = nextInterCode;
+            InterCodeList nextInterCodeList = visit(decContext);
+            if (interCodeList == null) {
+                interCodeList = nextInterCodeList;
                 continue;
             }
-            interCodeHead.addInterCode(nextInterCode);
+            interCodeList.addInterCodeList(nextInterCodeList);
         }
-        return interCodeHead;
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitDec(CmmParser.DecContext ctx) {
+    public InterCodeList visitDec(CmmParser.DecContext ctx) {
         if (ctx.getChildCount() == 1) {
             return visit(ctx.varDec());
         } else {
+            InterCodeList interCodeList = new InterCodeList();
             Operand temp1 = makeNewTemp();
             operandStack.push(temp1);
-            InterCode varDecInterCode = visit(ctx.varDec());
+            InterCodeList varDecInterCodeList = visit(ctx.varDec());
+            interCodeList.addInterCodeList(varDecInterCodeList);
             operandStack.pop();
 
             Operand temp2 = makeNewTemp();
             operandStack.push(temp2);
-            InterCode expInterCode = visit(ctx.exp());
+            InterCodeList expInterCodeList = visit(ctx.exp());
+            interCodeList.addInterCodeList(expInterCodeList);
             operandStack.pop();
+
             if (temp2.operandKind == OperandKind.ADDRESS) {
                 Operand tempValue = makeNewTemp();
-                InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR, tempValue,
+                InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR,
+                        tempValue,
                         temp2);
                 temp2 = tempValue;
-                expInterCode = InterCode.join(expInterCode, readAddrInterCode);
+                interCodeList.addInterCode(readAddrInterCode);
             }
 
-            InterCode assignInterCode = new InterCode.AssignCode(CodeKind.ASSIGN, temp1, temp2);
-            return InterCode.join(InterCode.join(varDecInterCode, expInterCode), assignInterCode);
+            InterCode assignInterCode = new InterCode.AssignCode(CodeKind.ASSIGN, temp1,
+                    temp2);
+            interCodeList.addInterCode(assignInterCode);
+
+            return interCodeList;
         }
     }
 
     @Override
-    public InterCode visitExpDot(CmmParser.ExpDotContext ctx) {
+    public InterCodeList visitExpDot(CmmParser.ExpDotContext ctx) {
         Operand target = operandStack.peek();
         if (target == null) {
             return defaultResult();
@@ -261,18 +290,19 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
         if (structType.getSymbolKind() != SymbolKind.STRUCTURE) {
             return defaultResult();
         }
+        InterCodeList interCodeList = new InterCodeList();
 
         // compute base addr
         Operand baseAddr = makeNewTemp(OperandKind.ADDRESS);
         operandStack.push(baseAddr);
-        InterCode getBaseAddrInterCode = visit(ctx.exp());
+        InterCodeList getBaseAddrInterCodeList = visit(ctx.exp());
+        interCodeList.addInterCodeList(getBaseAddrInterCodeList);
         operandStack.pop();
 
         // compute offset
         String fieldName = ctx.ID().getText();
         Field curField = ((Structure) structType).getMemberListHead();
         int offset = 0;
-
         // definitely can fieldName be found in structure
         while (curField != null) {
             if (curField.getName().equals(fieldName)) {
@@ -281,6 +311,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
             offset += getTypeSize(curField.getType());
             curField = curField.getNext();
         }
+        // exp DOT ID returns address for upper level to deal
         if (target.operandKind != OperandKind.ADDRESS) {
             target.operandKind = OperandKind.ADDRESS;
         }
@@ -288,15 +319,17 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
         if (offset == 0) {
             // reduce use of constant
             target.value = baseAddr.value;
-            return getBaseAddrInterCode;
+            return interCodeList;
         }
         InterCode computeAddrInterCode = new InterCode.BinOpCode(CodeKind.ADD, baseAddr,
                 makeNewConstant(String.valueOf(offset)), target);
-        return InterCode.join(getBaseAddrInterCode, computeAddrInterCode);
+        interCodeList.addInterCode(computeAddrInterCode);
+
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitExpOr(CmmParser.ExpOrContext ctx) {
+    public InterCodeList visitExpOr(CmmParser.ExpOrContext ctx) {
         Operand target = operandStack.peek();
         if (target == null) {
             return defaultResult();
@@ -305,7 +338,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
     }
 
     @Override
-    public InterCode visitExpRelop(CmmParser.ExpRelopContext ctx) {
+    public InterCodeList visitExpRelop(CmmParser.ExpRelopContext ctx) {
         Operand target = operandStack.peek();
         if (target == null) {
             return defaultResult();
@@ -314,92 +347,116 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
     }
 
     @Override
-    public InterCode visitExpPlusMinus(CmmParser.ExpPlusMinusContext ctx) {
+    public InterCodeList visitExpPlusMinus(CmmParser.ExpPlusMinusContext ctx) {
         Operand target = operandStack.peek();
         if (target == null) {
             return defaultResult();
         }
+        InterCodeList interCodeList = new InterCodeList();
+
         Operand temp1 = makeNewTemp();
         operandStack.push(temp1);
-        InterCode expCode1 = visit(ctx.exp(0));
+        InterCodeList expCode1 = visit(ctx.exp(0));
+        interCodeList.addInterCodeList(expCode1);
         operandStack.pop();
 
         if (temp1.operandKind == OperandKind.ADDRESS) {
             Operand temp = makeNewTemp();
             InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp, temp1);
-            expCode1 = InterCode.join(expCode1, readAddrCode);
+            interCodeList.addInterCode(readAddrCode);
             temp1 = temp;
         }
 
         Operand temp2 = makeNewTemp();
         operandStack.push(temp2);
-        InterCode expCode2 = visit(ctx.exp(1));
+        InterCodeList expCode2 = visit(ctx.exp(1));
+        interCodeList.addInterCodeList(expCode2);
         operandStack.pop();
 
         if (temp2.operandKind == OperandKind.ADDRESS) {
             Operand temp = makeNewTemp();
             InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp, temp2);
-            expCode2 = InterCode.join(expCode2, readAddrCode);
+            interCodeList.addInterCode(readAddrCode);
             temp2 = temp;
         }
 
         if (ctx.PLUS() != null) {
-            InterCode plusInterCode = new InterCode.BinOpCode(CodeKind.ADD, temp1, temp2, target);
-            return InterCode.join(InterCode.join(expCode1, expCode2), plusInterCode);
+            InterCode plusInterCode = new InterCode.BinOpCode(CodeKind.ADD, temp1, temp2,
+                    target);
+            interCodeList.addInterCode(plusInterCode);
         } else {
             InterCode minusInterCode = new InterCode.BinOpCode(CodeKind.SUB, temp1, temp2, target);
-            return InterCode.join(InterCode.join(expCode1, expCode2), minusInterCode);
+            interCodeList.addInterCode(minusInterCode);
         }
-
+        return interCodeList;
     }
 
     @Override
-    public InterCode visitExpAssignop(CmmParser.ExpAssignopContext ctx) {
+    public InterCodeList visitExpAssignop(CmmParser.ExpAssignopContext ctx) {
+
+        InterCodeList interCodeList = new InterCodeList();
+
         Operand target = operandStack.peek();
         Operand temp1 = makeNewTemp();
         operandStack.push(temp1);
-        InterCode expCode1 = visit(ctx.exp(0));
+        InterCodeList expCode1 = visit(ctx.exp(0));
+        interCodeList.addInterCodeList(expCode1);
         operandStack.pop();
+
         Operand temp2 = makeNewTemp();
         operandStack.push(temp2);
-        InterCode expCode2 = visit(ctx.exp(1));
+        InterCodeList expCode2 = visit(ctx.exp(1));
+        interCodeList.addInterCodeList(expCode2);
         operandStack.pop();
+
         // temp1 = temp2
         InterCode assignCode = new InterCode.AssignCode(CodeKind.ASSIGN, temp1, temp2);
+        InterCodeList assignCodeList = new InterCodeList(assignCode);
+
         // *temp1 = temp2
         if (temp1.operandKind == OperandKind.ADDRESS && temp2.operandKind != OperandKind.ADDRESS) {
             assignCode.codeKind = CodeKind.WRITE_ADDR;
         }
+
         // temp1 = *temp2
         if (temp1.operandKind != OperandKind.ADDRESS && temp2.operandKind == OperandKind.ADDRESS) {
             assignCode.codeKind = CodeKind.READ_ADDR;
         }
+
         // temp3 = *temp2
         // *temp1 = temp3
         if (temp1.operandKind == OperandKind.ADDRESS && temp2.operandKind == OperandKind.ADDRESS) {
             Operand temp3 = makeNewTemp();
-            InterCode temp2Totemp3AssignCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp3,
+            InterCode temp2Totemp3AssignCode = new InterCode.AssignCode(CodeKind.READ_ADDR,
+                    temp3,
                     temp2);
-            InterCode temp3totemp1AssignCode = new InterCode.AssignCode(CodeKind.WRITE_ADDR, temp1,
+            InterCode temp3totemp1AssignCode = new InterCode.AssignCode(CodeKind.WRITE_ADDR,
+                    temp1,
                     temp3);
             // dump original assignCode
-            assignCode = temp2Totemp3AssignCode;
-            assignCode.addInterCode(temp3totemp1AssignCode);
+            assignCodeList = new InterCodeList(temp2Totemp3AssignCode);
+            assignCodeList.addInterCode(temp3totemp1AssignCode);
         }
+
         // write value of temp1 to target
         if (target != null) {
             // target = temp1
-            InterCode assignToTargetCode = new InterCode.AssignCode(CodeKind.ASSIGN, target, temp1);
+            InterCode assignToTargetCode = new InterCode.AssignCode(CodeKind.ASSIGN, target,
+                    temp1);
+            InterCodeList assignToTargetCodeList = new InterCodeList(assignToTargetCode);
+
             // *target = temp1
             if (target.operandKind == OperandKind.ADDRESS
                     && temp1.operandKind != OperandKind.ADDRESS) {
                 assignToTargetCode.codeKind = CodeKind.WRITE_ADDR;
             }
+
             // target = *temp1
             if (target.operandKind != OperandKind.ADDRESS
                     && temp1.operandKind == OperandKind.ADDRESS) {
                 assignToTargetCode.codeKind = CodeKind.READ_ADDR;
             }
+
             // temp = *temp1
             // *target = temp
             if (target.operandKind == OperandKind.ADDRESS
@@ -409,32 +466,35 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                         temp1);
                 InterCode tempToTarget = new InterCode.AssignCode(CodeKind.WRITE_ADDR, temp1,
                         temp);
-                // dump original assignCode
-                assignToTargetCode = temp1ToTemp;
-                assignToTargetCode.addInterCode(tempToTarget);
+                // dump original assignToTargetCode
+                assignToTargetCodeList = new InterCodeList(temp1ToTemp);
+                assignToTargetCodeList.addInterCode(tempToTarget);
             }
-            assignCode.addInterCode(assignToTargetCode);
+            assignCodeList.addInterCodeList(assignToTargetCodeList);
         }
-        return InterCode.join(InterCode.join(expCode1, expCode2), assignCode);
+
+        interCodeList.addInterCodeList(assignCodeList);
+        return interCodeList;
+
     }
 
     @Override
-    public InterCode visitExpParenthesis(CmmParser.ExpParenthesisContext ctx) {
+    public InterCodeList visitExpParenthesis(CmmParser.ExpParenthesisContext ctx) {
         return visit(ctx.exp());
     }
 
     @Override
-    public InterCode visitExpFloat(CmmParser.ExpFloatContext ctx) {
+    public InterCodeList visitExpFloat(CmmParser.ExpFloatContext ctx) {
         Operand target = operandStack.peek();
         if (target != null) {
-            return new InterCode.AssignCode(CodeKind.ASSIGN, target,
-                    makeNewConstant(ctx.FLOAT().getText()));
+            return new InterCodeList(new InterCode.AssignCode(CodeKind.ASSIGN, target,
+                    makeNewConstant(ctx.FLOAT().getText())));
         }
         return defaultResult();
     }
 
     @Override
-    public InterCode visitExpAnd(CmmParser.ExpAndContext ctx) {
+    public InterCodeList visitExpAnd(CmmParser.ExpAndContext ctx) {
         Operand target = operandStack.peek();
         if (target == null) {
             return defaultResult();
@@ -443,88 +503,103 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
     }
 
     @Override
-    public InterCode visitExpFuncArgs(CmmParser.ExpFuncArgsContext ctx) {
+    public InterCodeList visitExpFuncArgs(CmmParser.ExpFuncArgsContext ctx) {
         if ("write".equals(ctx.ID().getText())) {
+            InterCodeList interCodeList = new InterCodeList();
             Operand temp = makeNewTemp();
             operandStack.push(temp);
-            InterCode expInterCode = visit(ctx.args().exp(0));
+            interCodeList.addInterCodeList(visit(ctx.args().exp(0)));
             operandStack.pop();
             if (temp.operandKind == OperandKind.ADDRESS) {
                 Operand temp2 = makeNewTemp();
-                InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp2, temp);
-                expInterCode = InterCode.join(expInterCode, readAddrCode);
+                InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp2,
+                        temp);
+                interCodeList.addInterCode(readAddrCode);
                 temp = temp2;
             }
             InterCode writeInterCode = new InterCode.MonoOpCode(CodeKind.WRITE, temp);
-            return InterCode.join(expInterCode, writeInterCode);
+            interCodeList.addInterCode(writeInterCode);
+
+            return interCodeList;
         }
+
         Operand target = operandStack.peek();
         if ("read".equals(ctx.ID().getText())) {
             if (target == null) {
                 return defaultResult();
             }
-            return new InterCode.MonoOpCode(CodeKind.READ, target);
+            return new InterCodeList(new InterCode.MonoOpCode(CodeKind.READ, target));
         }
+
         if (ctx.args() != null) {
             if (target == null) {
                 target = makeNewTemp();
             }
-            InterCode argsCode = visit(ctx.args());
+            InterCodeList argsCodeList = visit(ctx.args());
             InterCode callFunc = new InterCode.AssignCode(CodeKind.CALL, target,
                     new Operand(OperandKind.FUNCTION, ctx.ID().getText()));
-            return InterCode.join(argsCode, callFunc);
+            argsCodeList.addInterCode(callFunc);
+            return argsCodeList;
         } else {
             if (target == null) {
                 target = makeNewTemp();
             }
-            return new InterCode.AssignCode(CodeKind.CALL, target,
-                    new Operand(OperandKind.FUNCTION, ctx.ID().getText()));
+            return new InterCodeList(new InterCode.AssignCode(CodeKind.CALL, target,
+                    new Operand(OperandKind.FUNCTION, ctx.ID().getText())));
         }
     }
 
     @Override
-    public InterCode visitExpStarDiv(CmmParser.ExpStarDivContext ctx) {
+    public InterCodeList visitExpStarDiv(CmmParser.ExpStarDivContext ctx) {
         Operand target = operandStack.peek();
         if (target == null) {
             return defaultResult();
         }
+        InterCodeList interCodeList = new InterCodeList();
+
         Operand temp1 = makeNewTemp();
         operandStack.push(temp1);
-        InterCode expCode1 = visit(ctx.exp(0));
+        interCodeList.addInterCodeList(visit(ctx.exp(0)));
         operandStack.pop();
+
         if (temp1.operandKind == OperandKind.ADDRESS) {
             Operand tempValue = makeNewTemp();
-            InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR, tempValue,
+            InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR,
+                    tempValue,
                     temp1);
             temp1 = tempValue;
-            expCode1 = InterCode.join(expCode1, readAddrInterCode);
+            interCodeList.addInterCode(readAddrInterCode);
         }
 
         Operand temp2 = makeNewTemp();
         operandStack.push(temp2);
-        InterCode expCode2 = visit(ctx.exp(1));
+        interCodeList.addInterCodeList(visit(ctx.exp(1)));
         operandStack.pop();
 
         if (temp2.operandKind == OperandKind.ADDRESS) {
             Operand tempValue = makeNewTemp();
-            InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR, tempValue,
+            InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR,
+                    tempValue,
                     temp2);
             temp2 = tempValue;
-            expCode2 = InterCode.join(expCode2, readAddrInterCode);
+            interCodeList.addInterCode(readAddrInterCode);
         }
 
         if (ctx.STAR() != null) {
-            InterCode starInterCode = new InterCode.BinOpCode(CodeKind.MUL, temp1, temp2, target);
-            return InterCode.join(InterCode.join(expCode1, expCode2), starInterCode);
+            InterCode starInterCode = new InterCode.BinOpCode(CodeKind.MUL, temp1, temp2,
+                    target);
+            interCodeList.addInterCode(starInterCode);
         } else {
-            InterCode divInterCode = new InterCode.BinOpCode(CodeKind.DIV, temp1, temp2, target);
-            return InterCode.join(InterCode.join(expCode1, expCode2), divInterCode);
+            InterCode divInterCode = new InterCode.BinOpCode(CodeKind.DIV, temp1, temp2,
+                    target);
+            interCodeList.addInterCode(divInterCode);
         }
+        return interCodeList;
     }
 
 
     @Override
-    public InterCode visitExpInt(CmmParser.ExpIntContext ctx) {
+    public InterCodeList visitExpInt(CmmParser.ExpIntContext ctx) {
         Operand target = operandStack.peek();
         if (target != null) {
             // reduce use of temp var
@@ -535,32 +610,36 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
     }
 
     @Override
-    public InterCode visitExpMinusNot(CmmParser.ExpMinusNotContext ctx) {
+    public InterCodeList visitExpMinusNot(CmmParser.ExpMinusNotContext ctx) {
         Operand target = operandStack.peek();
         if (ctx.MINUS() != null) {
+            InterCodeList interCodeList = new InterCodeList();
+
             if (target == null) {
                 return defaultResult();
             }
             Operand temp = makeNewTemp();
             operandStack.push(temp);
             // temp = xxx
-            InterCode expInterCode = visit(ctx.exp());
+            interCodeList.addInterCodeList(visit(ctx.exp()));
             operandStack.pop();
 
-            // if temp.kind == address, read this addres
+            // if temp.kind == address, read this address
             if (temp.operandKind == OperandKind.ADDRESS) {
                 Operand tempValue = makeNewTemp();
                 InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR,
                         tempValue,
                         temp);
                 temp = tempValue;
-                expInterCode = InterCode.join(expInterCode, readAddrInterCode);
+                interCodeList.addInterCode(readAddrInterCode);
             }
 
             // target = 0 - temp
             InterCode minusInterCode = new InterCode.BinOpCode(CodeKind.SUB,
                     makeNewConstant("0"), temp, target);
-            return InterCode.join(expInterCode, minusInterCode);
+            interCodeList.addInterCode(minusInterCode);
+            return interCodeList;
+
         } else {
             if (target == null) {
                 return defaultResult();
@@ -570,7 +649,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
     }
 
     @Override
-    public InterCode visitExpId(CmmParser.ExpIdContext ctx) {
+    public InterCodeList visitExpId(CmmParser.ExpIdContext ctx) {
         Operand target = operandStack.peek();
         String idText = ctx.ID().getText();
         Type idType = table.getType(idText);
@@ -586,8 +665,8 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
         else if (idType.getSymbolKind() == SymbolKind.ARRAY) {
             if (target != null) {
                 target.operandKind = OperandKind.ADDRESS;
-                return new InterCode.AssignCode(CodeKind.GET_ADDR, target,
-                        makeNewVariable(idText));
+                return new InterCodeList(new InterCode.AssignCode(CodeKind.GET_ADDR, target,
+                        makeNewVariable(idText)));
             }
         }
         // exp DOT ID中的第一个exp
@@ -599,8 +678,8 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                     return defaultResult();
                 } else {
                     target.operandKind = OperandKind.ADDRESS;
-                    return new InterCode.AssignCode(CodeKind.GET_ADDR, target,
-                            makeNewVariable(idText));
+                    return new InterCodeList(new InterCode.AssignCode(CodeKind.GET_ADDR, target,
+                            makeNewVariable(idText)));
                 }
             }
         }
@@ -615,26 +694,30 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
      * @description change target kind to ADDRESS to which READ/WRITE happen in upper level
      */
     @Override
-    public InterCode visitExpBrackets(CmmParser.ExpBracketsContext ctx) {
+    public InterCodeList visitExpBrackets(CmmParser.ExpBracketsContext ctx) {
         Operand target = operandStack.peek();
         if (target == null) {
             return defaultResult();
         }
+        InterCodeList interCodeList = new InterCodeList();
+
         // compute base address
         Operand baseAddr = makeNewTemp(OperandKind.ADDRESS);
         operandStack.push(baseAddr);
-        InterCode getBaseAddrInterCode = visit(ctx.exp(0));
+        InterCodeList getBaseAddrInterCodeList = visit(ctx.exp(0));
+        interCodeList.addInterCodeList(getBaseAddrInterCodeList);
         operandStack.pop();
 
         // get index
         Operand arrayIndex = makeNewTemp();
         operandStack.push(arrayIndex);
-        InterCode getIndexInterCode = visit(ctx.exp(1));
+        InterCodeList getIndexInterCodeList = visit(ctx.exp(1));
+        interCodeList.addInterCodeList(getIndexInterCodeList);
         operandStack.pop();
 
         // compute offset
         Operand offset = makeNewTemp();
-        InterCode computeOffsetInterCode = null;
+        // 直接计算出offset
         if (arrayIndex.operandKind == OperandKind.CONSTANT) {
             offset.operandKind = OperandKind.CONSTANT;
             // ctx.exp(0) is array type for sure
@@ -642,47 +725,41 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                     Integer.parseInt(arrayIndex.value) * getTypeSize(
                             ((Array) getExpType(ctx.exp(0))).elements));
         }
+
         // 如果不是用常数来表示的index，那index * elementSize
         else {
-            computeOffsetInterCode = new InterCode.BinOpCode(CodeKind.MUL,
+            InterCode computeOffsetInterCode = new InterCode.BinOpCode(CodeKind.MUL,
                     makeNewConstant(String.valueOf(getTypeSize(
                             ((Array) getExpType(ctx.exp(0))).elements))),
                     arrayIndex, offset);
+            interCodeList.addInterCode(computeOffsetInterCode);
         }
 
         if (target.operandKind != OperandKind.ADDRESS) {
             target.operandKind = OperandKind.ADDRESS;
         }
         // compute actual addr
-        InterCode computeAddrInterCode = new InterCode.BinOpCode(CodeKind.ADD, baseAddr, offset,
+        InterCode computeAddrInterCode = new InterCode.BinOpCode(CodeKind.ADD, baseAddr,
+                offset,
                 target);
-        return InterCode.join(
-                InterCode.join(
-                        InterCode.join(
-                                getBaseAddrInterCode, getIndexInterCode),
-                        computeOffsetInterCode),
-                computeAddrInterCode);
+
+        interCodeList.addInterCode(computeAddrInterCode);
+        return interCodeList;
     }
 
 
     @Override
-    public InterCode visitArgs(CmmParser.ArgsContext ctx) {
-        InterCode expCodeHead = null;
-        InterCode argCodeHead = null;
+    public InterCodeList visitArgs(CmmParser.ArgsContext ctx) {
         List<CmmParser.ExpContext> expList = ctx.exp();
+        InterCodeList interCodeList = new InterCodeList();
         for (int i = expList.size() - 1; i >= 0; i--) {
             Operand temp = makeNewTemp();
             operandStack.push(temp);
-            InterCode expCode = visit(expList.get(i));
+            interCodeList.addInterCodeList(visit(expList.get(i)));
             operandStack.pop();
-            if (expCodeHead == null) {
-                expCodeHead = expCode;
-            } else {
-                expCodeHead.addInterCode(expCode);
-            }
+
             InterCode argCode;
             Type expType = getExpType(expList.get(i));
-
             if (temp.operandKind == OperandKind.ADDRESS) {
                 // sub(a); // a is struct or array
                 if (expType.getSymbolKind() == SymbolKind.ARRAY
@@ -694,7 +771,7 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                     Operand temp2 = makeNewTemp();
                     InterCode readAddrCode = new InterCode.AssignCode(CodeKind.READ_ADDR, temp2,
                             temp);
-                    InterCode.join(expCodeHead, readAddrCode);
+                    interCodeList.addInterCode(readAddrCode);
                     argCode = new InterCode.MonoOpCode(CodeKind.ARG, temp2);
                 }
             }
@@ -702,49 +779,54 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
             else {
                 argCode = new InterCode.MonoOpCode(CodeKind.ARG, temp);
             }
-            if (argCodeHead == null) {
-                argCodeHead = argCode;
-            } else {
-                argCodeHead.addInterCode(argCode);
-            }
+            interCodeList.addInterCode(argCode);
         }
-        return InterCode.join(expCodeHead, argCodeHead);
+        return interCodeList;
     }
 
-    private InterCode generateLogicResultInterCode(Operand target, CmmParser.ExpContext ctx) {
+    private InterCodeList generateLogicResultInterCode(Operand target, CmmParser.ExpContext ctx) {
+        InterCodeList interCodeList = new InterCodeList();
+
         // target = 0
         InterCode setToDefaultInterCode = new InterCode.AssignCode(CodeKind.ASSIGN, target,
                 makeNewConstant("0"));
+        interCodeList.addInterCode(setToDefaultInterCode);
+
         Operand label1 = makeNewLabel();
         Operand label2 = makeNewLabel();
         // if xxx goto label1
-        InterCode conditionJudgeCode = generateConditionInterCode(ctx, label1, label2);
+        InterCodeList conditionJudgeCode = generateConditionInterCode(ctx, label1, label2);
+        interCodeList.addInterCodeList(conditionJudgeCode);
+
         // Label label1
         InterCode label1Code = new InterCode.MonoOpCode(CodeKind.LABEL, label1);
+        interCodeList.addInterCode(label1Code);
+
         // target = 1
         InterCode setToTrueInterCode = new InterCode.AssignCode(CodeKind.ASSIGN, target,
                 makeNewConstant("1"));
+        interCodeList.addInterCode(setToTrueInterCode);
+
         // Label label2
         InterCode label2Code = new InterCode.MonoOpCode(CodeKind.LABEL, label2);
-        return InterCode.join(
-                InterCode.join(
-                        InterCode.join(
-                                InterCode.join(
-                                        setToDefaultInterCode, conditionJudgeCode),
-                                label1Code),
-                        setToTrueInterCode),
-                label2Code);
+        interCodeList.addInterCode(label2Code);
+
+        return interCodeList;
     }
 
-    private InterCode generateIfGoToInterCode(Operand op1, Operand op2, String relop,
+    private InterCodeList generateIfGoToInterCode(Operand op1, Operand op2, String relop,
             Operand labelTrue, Operand labelFalse) {
-        InterCode ifGoToInterCode = new InterCode.ConditionJumpCode(CodeKind.IF_GOTO, op1, relop,
+        InterCode ifGoToInterCode = new InterCode.ConditionJumpCode(CodeKind.IF_GOTO, op1,
+                relop,
                 op2, labelTrue);
         InterCode gotoInterCode = new InterCode.MonoOpCode(CodeKind.GOTO, labelFalse);
-        return InterCode.join(ifGoToInterCode, gotoInterCode);
+
+        InterCodeList interCodeList = new InterCodeList(ifGoToInterCode);
+        interCodeList.addInterCode(gotoInterCode);
+        return interCodeList;
     }
 
-    private InterCode generateConditionInterCode(CmmParser.ExpContext ctx, Operand labelTrue,
+    private InterCodeList generateConditionInterCode(CmmParser.ExpContext ctx, Operand labelTrue,
             Operand labelFalse) {
         if (ctx instanceof CmmParser.ExpMinusNotContext) {
             // NOT exp
@@ -755,66 +837,78 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
             }
             // MINUS exp
             else {
+                InterCodeList interCodeList = new InterCodeList();
+
                 Operand temp = makeNewTemp();
                 operandStack.push(temp);
                 // temp = xxx
-                InterCode expInterCode = visit(((CmmParser.ExpMinusNotContext) ctx).exp());
+                interCodeList.addInterCodeList(visit(((CmmParser.ExpMinusNotContext) ctx).exp()));
                 operandStack.pop();
 
                 if (temp.operandKind == OperandKind.ADDRESS) {
                     Operand tempValue = makeNewTemp();
-                    InterCode readAddrInterCode = new InterCode.AssignCode(CodeKind.READ_ADDR,
+                    InterCode readAddrInterCode = new InterCode.AssignCode(
+                            CodeKind.READ_ADDR,
                             tempValue,
                             temp);
                     temp = tempValue;
-                    expInterCode = InterCode.join(expInterCode, readAddrInterCode);
+                    interCodeList.addInterCode(readAddrInterCode);
                 }
 
                 Operand tempResult = makeNewTemp();
                 // tempResult = 0 - temp
                 InterCode minusInterCode = new InterCode.BinOpCode(CodeKind.SUB,
                         tempResult, makeNewConstant("0"), temp);
+                interCodeList.addInterCode(minusInterCode);
+
                 // if tempResult != 0 goto labelTrue
                 // goto labelFalse
-                InterCode ifGoToInterCode = generateIfGoToInterCode(tempResult,
+                InterCodeList ifGoToInterCodeList = generateIfGoToInterCode(tempResult,
                         makeNewConstant("0"),
                         "!=", labelTrue, labelFalse);
-                return InterCode
-                        .join(InterCode.join(expInterCode, minusInterCode), ifGoToInterCode);
+                interCodeList.addInterCodeList(ifGoToInterCodeList);
 
+                return interCodeList;
             }
         }
         // exp AND exp
         else if (ctx instanceof CmmParser.ExpAndContext) {
             Operand label1 = makeNewLabel();
-            InterCode code1 = generateConditionInterCode(((CmmParser.ExpAndContext) ctx).exp(0),
+            InterCodeList code1 = generateConditionInterCode(((CmmParser.ExpAndContext) ctx).exp(0),
                     label1,
                     labelFalse);
             InterCode label1Code = new InterCode.MonoOpCode(CodeKind.LABEL, label1);
             code1.addInterCode(label1Code);
-            InterCode code2 = generateConditionInterCode(((CmmParser.ExpAndContext) ctx).exp(1),
+
+            InterCodeList code2 = generateConditionInterCode(((CmmParser.ExpAndContext) ctx).exp(1),
                     labelTrue,
                     labelFalse);
-            return InterCode.join(code1, code2);
+
+            return InterCodeList.join(code1, code2);
         }
+
         // exp OR exp
         else if (ctx instanceof CmmParser.ExpOrContext) {
             Operand label1 = makeNewLabel();
-            InterCode code1 = generateConditionInterCode(((CmmParser.ExpOrContext) ctx).exp(0),
+            InterCodeList code1 = generateConditionInterCode(((CmmParser.ExpOrContext) ctx).exp(0),
                     labelTrue,
                     label1);
             InterCode label1Code = new InterCode.MonoOpCode(CodeKind.LABEL, label1);
             code1.addInterCode(label1Code);
-            InterCode code2 = generateConditionInterCode(((CmmParser.ExpOrContext) ctx).exp(1),
+
+            InterCodeList code2 = generateConditionInterCode(((CmmParser.ExpOrContext) ctx).exp(1),
                     labelTrue,
                     labelFalse);
-            return InterCode.join(code1, code2);
+
+            return InterCodeList.join(code1, code2);
         }
         // exp RELOP exp
         else if (ctx instanceof CmmParser.ExpRelopContext) {
+            InterCodeList interCodeList = new InterCodeList();
+
             Operand temp1 = makeNewTemp();
             operandStack.push(temp1);
-            InterCode expCode1 = visit(((CmmParser.ExpRelopContext) ctx).exp(0));
+            interCodeList.addInterCodeList(visit(((CmmParser.ExpRelopContext) ctx).exp(0)));
             operandStack.pop();
             if (temp1.operandKind == OperandKind.ADDRESS) {
                 Operand temp1Value = makeNewTemp();
@@ -822,12 +916,12 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                         temp1Value,
                         temp1);
                 temp1 = temp1Value;
-                expCode1 = InterCode.join(expCode1, readAddrInterCode);
+                interCodeList.addInterCode(readAddrInterCode);
             }
 
             Operand temp2 = makeNewTemp();
             operandStack.push(temp2);
-            InterCode expCode2 = visit(((CmmParser.ExpRelopContext) ctx).exp(1));
+            interCodeList.addInterCodeList(visit(((CmmParser.ExpRelopContext) ctx).exp(1)));
             operandStack.pop();
             if (temp2.operandKind == OperandKind.ADDRESS) {
                 Operand temp2Value = makeNewTemp();
@@ -835,16 +929,19 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                         temp2Value,
                         temp2);
                 temp2 = temp2Value;
-                expCode2 = InterCode.join(expCode2, readAddrInterCode);
+                interCodeList.addInterCode(readAddrInterCode);
             }
-            InterCode ifGoToInterCode = generateIfGoToInterCode(temp1, temp2,
-                    ((CmmParser.ExpRelopContext) ctx).RELOP().getText(), labelTrue, labelFalse);
 
-            return InterCode.join(InterCode.join(expCode1, expCode2), ifGoToInterCode);
+            InterCodeList ifGoToInterCodeList = generateIfGoToInterCode(temp1, temp2,
+                    ((CmmParser.ExpRelopContext) ctx).RELOP().getText(), labelTrue, labelFalse);
+            interCodeList.addInterCodeList(ifGoToInterCodeList);
+
+            return interCodeList;
         } else {
+            InterCodeList interCodeList = new InterCodeList();
             Operand temp = makeNewTemp();
             operandStack.push(temp);
-            InterCode expInterCode = visit(ctx);
+            interCodeList.addInterCodeList(visit(ctx));
             operandStack.pop();
 
             if (temp.operandKind == OperandKind.ADDRESS) {
@@ -853,11 +950,15 @@ public class CmmInterCodeGenerator extends CmmParserBaseVisitor<InterCode> {
                         tempValue,
                         temp);
                 temp = tempValue;
-                expInterCode = InterCode.join(expInterCode, readAddrInterCode);
+                interCodeList.addInterCode(readAddrInterCode);
             }
-            InterCode ifGoToInterCode = generateIfGoToInterCode(temp, makeNewConstant("0"), "!=",
+
+
+            InterCodeList ifGoToInterCodeList = generateIfGoToInterCode(temp, makeNewConstant("0"),
+                    "!=",
                     labelTrue, labelFalse);
-            return InterCode.join(expInterCode, ifGoToInterCode);
+            interCodeList.addInterCodeList(ifGoToInterCodeList);
+            return interCodeList;
         }
     }
 

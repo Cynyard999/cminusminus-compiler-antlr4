@@ -102,15 +102,6 @@ public abstract class InterCode {
         }
     }
 
-//    public static class ArgCode extends InterCode {
-//
-//        Operand operand;
-//        ArgCode nextArg;
-//
-//        public ArgCode(CodeKind codeKind) {
-//            super(codeKind);
-//        }
-//    }
 
     public static InterCode join(InterCode code1, InterCode code2) {
         if (code1 == null) {

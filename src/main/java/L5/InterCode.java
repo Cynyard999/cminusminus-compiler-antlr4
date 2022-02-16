@@ -2,18 +2,16 @@ package L5;
 
 /**
  * @author cynyard
- * @description 仅仅使用链表节点来表示整个链表数据结构，添加了tail指针方便添加 但使用有很多限制 例如一个链表中的一些节点的tail可能都不同，但保证头节点的tail一定是当前链表的tail
- * @date 1/1/22
+ * @description
+ * @date 1/2/22
  */
 public abstract class InterCode {
 
     CodeKind codeKind;
     InterCode next;
-    InterCode tail;
 
     public InterCode(CodeKind codeKind) {
         this.codeKind = codeKind;
-        this.tail = this;
     }
 
 
@@ -101,32 +99,6 @@ public abstract class InterCode {
             this.operand = operand;
             this.size = size;
         }
-    }
-
-//    public static class ArgCode extends InterCode {
-//
-//        Operand operand;
-//        ArgCode nextArg;
-//
-//        public ArgCode(CodeKind codeKind) {
-//            super(codeKind);
-//        }
-//    }
-
-    public static InterCode join(InterCode code1, InterCode code2) {
-        if (code1 == null) {
-            return code2;
-        }
-        code1.addInterCode(code2);
-        return code1;
-    }
-
-    public void addInterCode(InterCode newCode) {
-        if (newCode == null) {
-            return;
-        }
-        this.tail.next = newCode;
-        this.tail = newCode.tail;
     }
 
     @Override
