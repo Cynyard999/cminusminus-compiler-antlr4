@@ -9,7 +9,7 @@ public class InterCodeList {
 
     InterCode head = null;
     InterCode tail = null;
-    int size = 0;
+    private int size = 0;
 
     public InterCodeList() {
 
@@ -62,7 +62,7 @@ public class InterCodeList {
         this.size += newInterCodeList.size;
     }
 
-    private boolean isEmpty() {
+    public boolean isEmpty() {
         return this.size == 0;
     }
 }

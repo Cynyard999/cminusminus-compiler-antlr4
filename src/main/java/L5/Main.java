@@ -35,12 +35,12 @@ public class Main {
 
         ParseTree checkedTree = semanticsStart(tree);
 
-        InterCode interCodeHead = intermediateRepresentationStart(checkedTree);
+        InterCodeList interCodeList = intermediateRepresentationStart(checkedTree);
 
         if (args.length > 1) {
-            assemblyCodeStart(interCodeHead, new PrintStream(args[1]));
+            assemblyCodeStart(interCodeList, new PrintStream(args[1]));
         } else {
-            assemblyCodeStart(interCodeHead, System.out);
+            assemblyCodeStart(interCodeList, System.out);
         }
 
         OutputHelper.resetOutput();
@@ -96,7 +96,7 @@ public class Main {
         }
     }
 
-    private static InterCode intermediateRepresentationStart(ParseTree tree) {
+    private static InterCodeList intermediateRepresentationStart(ParseTree tree) {
         if (tree == null) {
             return null;
         }
@@ -112,13 +112,13 @@ public class Main {
 //        return interCodeHead;
     }
 
-    private static void assemblyCodeStart(InterCode interCodeHead, PrintStream output) {
-        if (interCodeHead == null) {
+    private static void assemblyCodeStart(InterCodeList interCodeList, PrintStream output) {
+        if (interCodeList == null || interCodeList.isEmpty()) {
             return;
         }
         // BEGIN ASSEMBLY PART
         OutputHelper.setOutput(output);
-        AssemblyCodeGenerator assemblyCodeGenerator = new AssemblyCodeGenerator(interCodeHead);
+        AssemblyCodeGenerator assemblyCodeGenerator = new AssemblyCodeGenerator(interCodeList.head);
         assemblyCodeGenerator.start();
     }
 
